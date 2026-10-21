@@ -1,0 +1,52 @@
+---
+alwaysApply: true
+---
+
+# Clean Code Core Principles
+
+Clean code is simple, direct, and easy to read. It prioritizes maintainability, lowers cognitive load, and minimizes bugs. When generating or refactoring code, you must strictly adhere to the following principles:
+
+## Meaningful Names
+
+- Variables, functions, and classes MUST reveal their exact purpose and context.
+- Choose descriptive, unambiguous names over generic concepts (e.g., use `fetchUserData` instead of `getData`).
+- Avoid abbreviations unless they are universally understood domain standards.
+
+## The Single Responsibility Principle (SRP)
+
+- Each function or class must do exactly one thing and have only one reason to change.
+- Functions should be small and focused
+- If a function requires comments to explain its internal steps, you must extract those steps into well-named helper functions.
+
+## Don't Repeat Yourself (DRY)
+
+- Extract repeated logic into reusable functions or utilities.
+- Maintain a single source of truth for business rules and configuration.
+
+## Smart Comments & Self-Documenting Code
+
+- Do NOT write comments explaining _what_ the code does. The code itself must be readable enough to explain the "what".
+- Only write comments to explain the _why_ (intent, edge-case justifications, or complex business logic decisions).
+
+## Constants Over Magic Numbers
+
+- Never use hard-coded "magic" numbers or strings in the logic.
+- Replace them with descriptive, capitalized named constants (e.g., `MAX_RETRY_ATTEMPTS = 3`).
+- Keep constants at the top of the file or in a dedicated configuration file.
+
+## Clean Structure
+
+- Keep related code together
+- Organize code in a logical hierarchy
+- Use consistent file and folder naming conventions
+
+## Keep It Simple & YAGNI
+
+- Avoid over-engineering. Do not implement features, abstractions, or generic types for future use cases that do not exist yet (You Aren't Gonna Need It).
+- The best solution is always the simplest one that satisfies the current requirements.
+
+## Architecture & Encapsulation
+
+- Hide implementation details and expose clear, strict interfaces/contracts.
+- Isolate external dependencies (APIs, databases, third-party services) using the Adapter or Repository pattern to prevent tight coupling with the UI or core logic.
+- Move deeply nested conditionals into well-named early-return functions (Guard Clauses).

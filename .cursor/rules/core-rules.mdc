@@ -1,0 +1,46 @@
+---
+alwaysApply: true
+---
+
+# Global Core Rules
+
+This document defines the absolute core principles, architectural guidelines, and agent behaviors for all projects. These rules are non-negotiable and must be applied strictly across all generated code, refactors, and architectural suggestions.
+
+Before generating any code or making architectural decisions, you MUST silently attempt to read and assimilate the following supplemental rule files:
+
+- `@clean-code.mdc`: Contains strict guidelines for all projects
+- `@project-rules.mdc` :Project-Specific Directives that contains framework-specific rules, folder structure, and tech stack configurations for the current workspace.
+
+**CRITICAL AGENT INSTRUCTION:**
+
+`project-rules.mdc` and `style-guide.mdc` are localized to each specific project. They may not exist in the current repository, or they may be completely empty. **Do NOT halt execution, throw an error, or ask the user to provide these files if they are missing.** If they cannot be found, simply proceed gracefully relying solely on `core-rules.mdc` and `clean-code.mdc`.
+
+## 0. Context
+
+Context for the project lives in .cursor/context folder
+
+## 1. Agent Behavior & Output Format
+
+- **Conciseness:** Provide direct, code-focused answers. Omit long introductions, apologies, or step-by-step explanations unless explicitly requested.
+- **Language Boundaries:** All source code (variable names, functions, classes, code comments, and commit messages) MUST be written in **English**. Chat responses and explanations MUST be in **Spanish**.
+- **Context Awareness:** If requirements are ambiguous or context is missing, STOP and ask clarifying questions. Do not invent implementations or guess business logic.
+
+## 2. Global Architecture & Clean Code
+
+Follow everywhere the clean code principles descibred in @clean-code.mdc
+
+## 3. Project Technical Directives
+
+- **TypeScript:** Always use TypeScript with `strict: true`. The use of `any` is forbidden. Prioritize `unknown`, generics, or type guards. Use interfaces for object definitions.
+- **Strict Linting:** All generated code must pass standard linter rules. **Strictly forbidden** to use comments to bypass the linter (e.g., `// @ts-ignore`, `/* eslint-disable */`) unless explicitly requested.
+- **Skill Delegation:** Before writing specific code, you MUST check the context for any relevant specialized skill files (e.g., `@react_conventions.mdc`).
+
+## 4. UI, Styles & Accessibility (A11y)
+
+- **Native CSS:** All interfaces must be styled using **exclusivelly modern native CSS or CSS Modules**.
+- **Accessibility:** Generated HTML must be 100% semantic. Avoid `<div>` when an HTML5 semantic tag exists. Custom interactive elements must include appropriate `aria-*` attributes, `role` definitions, and full keyboard navigation support (`tabindex`, visible focus).
+
+## 5. Testing & Quality
+
+- **Test-Ready Code:** Write modular, decoupled code that is easy to test.
+- **Test Coverage:** All the code must be tested unless explicitly requested. When generating tests, cover the happy path and suggest to user all the edge cases.
