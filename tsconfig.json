@@ -1,10 +1,4 @@
 {
-  "extends": "./tsconfig.base.json",
-  "compilerOptions": {
-    "noEmit": true,
-    "rootDir": ".",
-    "types": ["node"]
-  },
-  "include": ["tooling/**/*.ts"],
-  "exclude": ["node_modules", "dist", "out", "src/webview"]
+  "files": [],
+  "references": [{ "path": "./tsconfig.extension.json" }, { "path": "./tsconfig.webview.json" }]
 }

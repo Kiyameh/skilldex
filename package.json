@@ -4,6 +4,7 @@
   "description": "Panel visual para Rules y Skills de IA locales bajo .cursor/",
   "version": "0.0.1",
   "publisher": "andoni",
+  "private": true,
   "engines": {
     "vscode": "^1.85.0",
     "node": ">=18"
@@ -11,24 +12,70 @@
   "categories": [
     "Other"
   ],
+  "main": "./out/extension/extension.js",
+  "contributes": {
+    "commands": [
+      {
+        "command": "skilldex.openDashboard",
+        "title": "Abrir SkillDex",
+        "category": "SkillDex"
+      }
+    ],
+    "viewsContainers": {
+      "activitybar": [
+        {
+          "id": "skilldex",
+          "title": "SkillDex",
+          "icon": "media/skilldex-icon.svg"
+        }
+      ]
+    },
+    "views": {
+      "skilldex": [
+        {
+          "type": "webview",
+          "id": "skilldex.dashboardView",
+          "name": "SkillDex"
+        }
+      ]
+    }
+  },
   "scripts": {
-    "typecheck": "tsc --noEmit -p tsconfig.json",
+    "vscode:prepublish": "npm run build",
+    "compile": "tsc -p tsconfig.extension.json",
+    "watch:host": "tsc -p tsconfig.extension.json --watch",
+    "build:webview": "vite build --config src/webview/vite.config.ts",
+    "watch:webview": "vite build --config src/webview/vite.config.ts --watch",
+    "build": "npm run compile && npm run build:webview",
+    "watch": "concurrently -n host,webview -c blue,magenta \"npm run watch:host\" \"npm run watch:webview\"",
+    "typecheck": "tsc --noEmit -p tsconfig.extension.json && tsc --noEmit -p tsconfig.webview.json",
     "lint": "eslint .",
     "lint:fix": "eslint . --fix",
     "format": "prettier --write .",
     "format:check": "prettier --check ."
   },
+  "dependencies": {
+    "react": "^19.1.1",
+    "react-dom": "^19.1.1"
+  },
   "devDependencies": {
     "@eslint/js": "^9.37.0",
+    "@tailwindcss/vite": "^4.1.13",
     "@types/node": "^22.18.8",
+    "@types/react": "^19.1.13",
+    "@types/react-dom": "^19.1.9",
+    "@types/vscode": "^1.85.0",
+    "@vitejs/plugin-react": "^5.0.3",
+    "concurrently": "^9.2.1",
     "eslint": "^9.37.0",
     "eslint-config-prettier": "^10.1.8",
     "eslint-plugin-react": "^7.37.5",
     "eslint-plugin-react-hooks": "^5.2.0",
     "globals": "^16.4.0",
     "prettier": "^3.6.2",
+    "tailwindcss": "^4.1.13",
     "typescript": "^5.9.3",
-    "typescript-eslint": "^8.46.0"
-  },
-  "private": true
+    "typescript-eslint": "^8.46.0",
+    "vite": "^7.1.7"
+  }
 }
