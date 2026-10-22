@@ -1,6 +1,7 @@
 import type { ExtensionContext, WebviewView, WebviewViewProvider } from "vscode";
 import { Uri } from "vscode";
 import { getWebviewHtml } from "./get-webview-html.js";
+import { startHandshake } from "./host-message-adapter.js";
 
 export class DashboardViewProvider implements WebviewViewProvider {
   public constructor(private readonly extensionContext: ExtensionContext) {}
@@ -14,5 +15,8 @@ export class DashboardViewProvider implements WebviewViewProvider {
     };
 
     webviewView.webview.html = getWebviewHtml(webviewView.webview, this.extensionContext);
+
+    const handshake = startHandshake(webviewView.webview);
+    webviewView.onDidDispose(() => handshake.dispose());
   }
 }
