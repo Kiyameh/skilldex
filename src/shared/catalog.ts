@@ -11,3 +11,8 @@ export interface CatalogItem {
   description?: string;
   globs?: string[];
 }
+
+export interface CatalogPayload {
+  skills: CatalogItem[];
+  rules: CatalogItem[];
+}

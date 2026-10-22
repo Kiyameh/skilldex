@@ -1,30 +1,72 @@
 import { describe, expect, it } from "vitest";
 import { HOST_TO_WEBVIEW_MESSAGE_TYPES, WEBVIEW_TO_HOST_MESSAGE_TYPES } from "./messages.js";
-import { isHostToWebviewMessage, isWebviewToHostMessage } from "./type-guards.js";
+import { isCatalogItem, isHostToWebviewMessage, isWebviewToHostMessage } from "./type-guards.js";
+
+const SAMPLE_CATALOG_ITEM = {
+  id: ".cursor/rules/example.mdc",
+  kind: "rule" as const,
+  path: "/tmp/workspace/.cursor/rules/example.mdc",
+  enabled: true,
+  title: "Example",
+  globs: ["**/*.ts"],
+};
 
 describe("isHostToWebviewMessage", () => {
   it("accepts a well-formed host ready handshake", () => {
     expect(isHostToWebviewMessage({ type: HOST_TO_WEBVIEW_MESSAGE_TYPES.ready })).toBe(true);
   });
 
-  it("rejects payloads that are not host handshake messages", () => {
+  it("accepts a well-formed host catalog message", () => {
+    expect(
+      isHostToWebviewMessage({
+        type: HOST_TO_WEBVIEW_MESSAGE_TYPES.catalog,
+        skills: [],
+        rules: [SAMPLE_CATALOG_ITEM],
+      }),
+    ).toBe(true);
+  });
+
+  it("rejects payloads that are not host messages", () => {
     expect(isHostToWebviewMessage(null)).toBe(false);
     expect(isHostToWebviewMessage(undefined)).toBe(false);
     expect(isHostToWebviewMessage("host/ready")).toBe(false);
     expect(isHostToWebviewMessage([])).toBe(false);
     expect(isHostToWebviewMessage({ type: WEBVIEW_TO_HOST_MESSAGE_TYPES.ready })).toBe(false);
     expect(isHostToWebviewMessage({ type: "unknown" })).toBe(false);
+    expect(
+      isHostToWebviewMessage({
+        type: HOST_TO_WEBVIEW_MESSAGE_TYPES.catalog,
+        skills: "nope",
+        rules: [],
+      }),
+    ).toBe(false);
   });
 });
 
 describe("isWebviewToHostMessage", () => {
-  it("accepts a well-formed webview ready handshake", () => {
+  it("accepts ready and catalog request messages", () => {
     expect(isWebviewToHostMessage({ type: WEBVIEW_TO_HOST_MESSAGE_TYPES.ready })).toBe(true);
+    expect(isWebviewToHostMessage({ type: WEBVIEW_TO_HOST_MESSAGE_TYPES.catalogRequest })).toBe(
+      true,
+    );
   });
 
-  it("rejects payloads that are not webview handshake messages", () => {
+  it("rejects payloads that are not webview-to-host messages", () => {
     expect(isWebviewToHostMessage(null)).toBe(false);
     expect(isWebviewToHostMessage({ type: HOST_TO_WEBVIEW_MESSAGE_TYPES.ready })).toBe(false);
     expect(isWebviewToHostMessage({ type: "unknown" })).toBe(false);
+  });
+});
+
+describe("isCatalogItem", () => {
+  it("accepts a well-formed catalog item", () => {
+    expect(isCatalogItem(SAMPLE_CATALOG_ITEM)).toBe(true);
+  });
+
+  it("rejects malformed catalog items", () => {
+    expect(isCatalogItem(null)).toBe(false);
+    expect(isCatalogItem({ ...SAMPLE_CATALOG_ITEM, kind: "other" })).toBe(false);
+    expect(isCatalogItem({ ...SAMPLE_CATALOG_ITEM, enabled: "yes" })).toBe(false);
+    expect(isCatalogItem({ ...SAMPLE_CATALOG_ITEM, globs: [1] })).toBe(false);
   });
 });
