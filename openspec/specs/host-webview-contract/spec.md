@@ -27,3 +27,11 @@ The shared contract SHALL include domain types sufficient for later catalog slic
 #### Scenario: Catalog item shape exists in shared types
 - **WHEN** a later change imports shared domain types
 - **THEN** it MUST be able to reference a catalog item kind (`rule` or `skill`), filesystem path, display fields placeholders, and `enabled` boolean without inventing a parallel type system
+
+### Requirement: Catalog request and response messages
+The shared contract SHALL define a Webview→Host message to request the catalog and a Host→Webview message that carries the parsed Rules and Skills lists.
+
+#### Scenario: Request catalog message exists
+- **WHEN** the Webview needs the current catalog
+- **THEN** it MUST send the typed request message defined by the contract
+- **AND** the Host MUST respond with a typed catalog payload containing `skills` and `rules` arrays
