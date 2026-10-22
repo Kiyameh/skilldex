@@ -1,0 +1,68 @@
+schema: spec-driven
+
+context: |
+  Language: Spanish
+  All artifacts must be written in Spanish.
+  Keep OpenSpec structural headings and SHALL/MUST keywords in English.
+
+  Project: SkillDex (package name: skilldex, publisher: andoni)
+  Product: VS Code extension — visual dashboard for local AI Rules and Skills under `.cursor/`.
+
+  Strategy: Spec-Driven Vertical Slices (Host ↔ shared contract/types ↔ Webview ↔ filesystem).
+  Each change must leave a minimal verifiable vertical path; no pure horizontal layers as primary units.
+
+  Stack:
+  - Extension Host: Node.js / TypeScript (strict)
+  - Parse: gray-matter (YAML frontmatter on .md / .mdc)
+  - Webview UI: React + Vite + Tailwind CSS
+  - Sync: vscode.workspace.createFileSystemWatcher
+  - Host↔Webview: postMessage / onDidReceiveMessage
+
+  Identity:
+  - displayName: SkillDex
+  - name: skilldex
+  - publisher: andoni
+
+  MVP in-scope:
+  - Discover Rules in `.cursor/rules/` (.mdc / .md) and Skills in `.cursor/skills/` (SKILL.md trees)
+  - Skills are the primary focus; Rules are secondary but in MVP
+  - Dashboard Webview: two differentiated sections (Skills + Rules); cards show habitual metadata
+    (Skills: name, description, enabled; Rules: title/description, globs, enabled). More metadata later.
+  - Toggle 1-click via frontmatter `enabled: false` on both Rules and Skills (SKILL.md)
+  - Open item in native editor (showTextDocument) — separate change
+  - Create new Rule (`.mdc` template) and new Skill (`SKILL.md` folder template) — one change, separate from open
+  - Live sync via FileSystemWatcher
+
+  MVP out-of-scope:
+  - WYSIWYG / rich Markdown editor inside Webview
+  - Multi-format parsers (Copilot, Windsurf, Claude Code, etc.)
+  - Token metrics, analytics, LLM APIs
+  - Complex automated testing or Marketplace publish automation
+  - `.vscode/rules/` (deferred; MVP is `.cursor/` only)
+
+  Conventions:
+  - Source code / symbols / commit messages: English
+  - User-facing chat and OpenSpec narrative: Spanish
+  - Do not invent product requirements; ask when ambiguous
+
+# Per-artifact rules (optional)
+# Add custom rules for specific artifacts.
+# Example:
+#   rules:
+#     proposal:
+#       - Keep proposals under 500 words
+#       - Always include a "Non-goals" section
+#     tasks:
+#       - Break tasks into chunks of max 2 hours
+
+# Per-operation guidance (optional)
+# Add advisory guidance for how apply and archive work should be conducted.
+# This is separate from artifact rules above.
+# Example:
+#   operations:
+#     apply:
+#       guidance:
+#         - Keep test summaries concise
+#     archive:
+#       guidance:
+#         - Summarize the archive outcome before finishing
