@@ -6,11 +6,14 @@ import {
   type CatalogPayload,
   type HostToWebviewMessage,
   type WebviewToHostMessage,
+  type WebviewToggleEnabledMessage,
 } from "../shared/index.js";
 import { discoverCatalog } from "./discover-catalog.js";
+import { setItemEnabled } from "./set-item-enabled.js";
 
 const HANDSHAKE_RETRY_ATTEMPTS = 20;
 const HANDSHAKE_RETRY_INTERVAL_MS = 100;
+const MISSING_WORKSPACE_ERROR = "No workspace folder is open";
 
 export interface HostMessageAdapterOptions {
   getWorkspaceRoot: () => string | undefined;
@@ -45,6 +48,42 @@ async function replyWithCatalog(
   });
 }
 
+async function replyToToggleEnabled(
+  webview: Webview,
+  getWorkspaceRoot: () => string | undefined,
+  message: WebviewToggleEnabledMessage,
+): Promise<void> {
+  const workspaceRoot = getWorkspaceRoot();
+  if (workspaceRoot === undefined) {
+    postHostMessage(webview, {
+      type: HOST_TO_WEBVIEW_MESSAGE_TYPES.toggleResult,
+      ok: false,
+      id: message.id,
+      enabled: message.enabled,
+      error: MISSING_WORKSPACE_ERROR,
+    });
+    return;
+  }
+
+  const result = await setItemEnabled(workspaceRoot, message.id, message.enabled);
+  if (result.ok) {
+    postHostMessage(webview, {
+      type: HOST_TO_WEBVIEW_MESSAGE_TYPES.toggleResult,
+      ok: true,
+      item: result.item,
+    });
+    return;
+  }
+
+  postHostMessage(webview, {
+    type: HOST_TO_WEBVIEW_MESSAGE_TYPES.toggleResult,
+    ok: false,
+    id: message.id,
+    enabled: message.enabled,
+    error: result.error,
+  });
+}
+
 export function startHostMessageHandling(
   webview: Webview,
   options: HostMessageAdapterOptions,
@@ -70,7 +109,11 @@ export function startHostMessageHandling(
 
     if (message.type === WEBVIEW_TO_HOST_MESSAGE_TYPES.catalogRequest) {
       void replyWithCatalog(webview, options.getWorkspaceRoot);
+      return;
     }
+
+    if (message.type === WEBVIEW_TO_HOST_MESSAGE_TYPES.toggleEnabled)
+      void replyToToggleEnabled(webview, options.getWorkspaceRoot, message);
   });
 
   sendHostReady();

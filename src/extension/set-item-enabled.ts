@@ -1,0 +1,60 @@
+import { readFile, writeFile } from "node:fs/promises";
+import matter from "gray-matter";
+import type { CatalogItem } from "../shared/index.js";
+import { resolveCatalogItemPath } from "./catalog-paths.js";
+import { mapFrontmatterToCatalogItem } from "./map-frontmatter.js";
+
+export type SetItemEnabledSuccess = {
+  ok: true;
+  item: CatalogItem;
+};
+
+export type SetItemEnabledFailure = {
+  ok: false;
+  error: string;
+};
+
+export type SetItemEnabledResult = SetItemEnabledSuccess | SetItemEnabledFailure;
+
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === "object" && value !== null && !Array.isArray(value);
+}
+
+function toErrorMessage(error: unknown): string {
+  return error instanceof Error ? error.message : String(error);
+}
+
+/**
+ * MVP writes `enabled: true` explicitly (never removes the key) so enable/disable
+ * are symmetric and easy to inspect in frontmatter.
+ */
+export async function setItemEnabled(
+  workspaceRoot: string,
+  itemId: string,
+  enabled: boolean,
+): Promise<SetItemEnabledResult> {
+  const resolved = resolveCatalogItemPath(workspaceRoot, itemId);
+  if (resolved === undefined)
+    return { ok: false, error: `Unknown or invalid catalog item id: ${itemId}` };
+
+  try {
+    const fileContents = await readFile(resolved.absolutePath, "utf8");
+    const parsed = matter(fileContents);
+    const existingData = isRecord(parsed.data) ? parsed.data : {};
+    const nextData: Record<string, unknown> = { ...existingData, enabled };
+    const nextContents = matter.stringify(parsed.content, nextData);
+
+    await writeFile(resolved.absolutePath, nextContents, "utf8");
+
+    const item = mapFrontmatterToCatalogItem(
+      resolved.absolutePath,
+      itemId,
+      resolved.kind,
+      nextContents,
+    );
+
+    return { ok: true, item };
+  } catch (error: unknown) {
+    return { ok: false, error: toErrorMessage(error) };
+  }
+}

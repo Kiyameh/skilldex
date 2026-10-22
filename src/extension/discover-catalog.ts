@@ -1,12 +1,14 @@
 import { readdir, readFile } from "node:fs/promises";
 import path from "node:path";
 import type { CatalogItem, CatalogPayload } from "../shared/index.js";
+import {
+  RULES_DIRECTORY,
+  SKILLS_DIRECTORY,
+  isRuleFile,
+  isSkillFile,
+  toPosixRelativeId,
+} from "./catalog-paths.js";
 import { mapFrontmatterToCatalogItem } from "./map-frontmatter.js";
-
-const RULES_DIRECTORY = path.join(".cursor", "rules");
-const SKILLS_DIRECTORY = path.join(".cursor", "skills");
-const RULE_EXTENSIONS = new Set([".mdc", ".md"]);
-const SKILL_FILE_NAME = "SKILL.md";
 
 async function collectFilesRecursively(directoryPath: string): Promise<string[]> {
   const entries = await readdir(directoryPath, { withFileTypes: true }).catch((error: unknown) => {
@@ -32,18 +34,6 @@ function isMissingPathError(error: unknown): boolean {
 
 function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === "object" && value !== null && !Array.isArray(value);
-}
-
-function toPosixRelativeId(workspaceRoot: string, absolutePath: string): string {
-  return path.relative(workspaceRoot, absolutePath).split(path.sep).join("/");
-}
-
-function isRuleFile(filePath: string): boolean {
-  return RULE_EXTENSIONS.has(path.extname(filePath).toLowerCase());
-}
-
-function isSkillFile(filePath: string): boolean {
-  return path.basename(filePath) === SKILL_FILE_NAME;
 }
 
 async function mapFileToCatalogItem(
