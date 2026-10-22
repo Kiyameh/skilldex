@@ -13,6 +13,7 @@ export default tseslint.config(
       "out/**",
       "**/*.vsix",
       "coverage/**",
+      ".vscode-test/**",
       ".cursor/**",
       "openspec/**",
     ],
@@ -20,7 +21,12 @@ export default tseslint.config(
   eslint.configs.recommended,
   ...tseslint.configs.recommended,
   {
-    files: ["src/extension/**/*.{ts,tsx}", "src/shared/**/*.ts", "tooling/**/*.ts"],
+    files: [
+      "src/extension/**/*.{ts,tsx}",
+      "src/shared/**/*.ts",
+      "tooling/**/*.ts",
+      "vitest.config.ts",
+    ],
     languageOptions: {
       globals: {
         ...globals.node,
@@ -32,6 +38,14 @@ export default tseslint.config(
         "error",
         { prefer: "type-imports", fixStyle: "separate-type-imports" },
       ],
+    },
+  },
+  {
+    files: ["src/**/*.integration.test.ts"],
+    languageOptions: {
+      globals: {
+        ...globals.mocha,
+      },
     },
   },
   {

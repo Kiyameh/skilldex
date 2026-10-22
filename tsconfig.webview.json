@@ -16,5 +16,13 @@
     "src/webview/**/*.d.ts",
     "src/shared/**/*.ts"
   ],
-  "exclude": ["node_modules", "dist", "out", "src/webview/vite.config.ts"]
+  "exclude": [
+    "node_modules",
+    "dist",
+    "out",
+    "src/webview/vite.config.ts",
+    "src/webview/setup-tests.ts",
+    "src/**/*.test.ts",
+    "src/**/*.test.tsx"
+  ]
 }

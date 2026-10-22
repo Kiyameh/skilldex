@@ -2,6 +2,7 @@ node_modules
 dist
 out
 coverage
+.vscode-test
 *.vsix
 package-lock.json
 .cursor
