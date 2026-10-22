@@ -26,6 +26,28 @@ describe("isHostToWebviewMessage", () => {
     ).toBe(true);
   });
 
+  it("accepts a well-formed toggle result success message", () => {
+    expect(
+      isHostToWebviewMessage({
+        type: HOST_TO_WEBVIEW_MESSAGE_TYPES.toggleResult,
+        ok: true,
+        item: SAMPLE_CATALOG_ITEM,
+      }),
+    ).toBe(true);
+  });
+
+  it("accepts a well-formed toggle result failure message", () => {
+    expect(
+      isHostToWebviewMessage({
+        type: HOST_TO_WEBVIEW_MESSAGE_TYPES.toggleResult,
+        ok: false,
+        id: SAMPLE_CATALOG_ITEM.id,
+        enabled: false,
+        error: "write failed",
+      }),
+    ).toBe(true);
+  });
+
   it("rejects payloads that are not host messages", () => {
     expect(isHostToWebviewMessage(null)).toBe(false);
     expect(isHostToWebviewMessage(undefined)).toBe(false);
@@ -40,21 +62,41 @@ describe("isHostToWebviewMessage", () => {
         rules: [],
       }),
     ).toBe(false);
+    expect(
+      isHostToWebviewMessage({
+        type: HOST_TO_WEBVIEW_MESSAGE_TYPES.toggleResult,
+        ok: true,
+        item: { ...SAMPLE_CATALOG_ITEM, kind: "other" },
+      }),
+    ).toBe(false);
   });
 });
 
 describe("isWebviewToHostMessage", () => {
-  it("accepts ready and catalog request messages", () => {
+  it("accepts ready, catalog request, and toggle enabled messages", () => {
     expect(isWebviewToHostMessage({ type: WEBVIEW_TO_HOST_MESSAGE_TYPES.ready })).toBe(true);
     expect(isWebviewToHostMessage({ type: WEBVIEW_TO_HOST_MESSAGE_TYPES.catalogRequest })).toBe(
       true,
     );
+    expect(
+      isWebviewToHostMessage({
+        type: WEBVIEW_TO_HOST_MESSAGE_TYPES.toggleEnabled,
+        id: SAMPLE_CATALOG_ITEM.id,
+        enabled: false,
+      }),
+    ).toBe(true);
   });
 
   it("rejects payloads that are not webview-to-host messages", () => {
     expect(isWebviewToHostMessage(null)).toBe(false);
     expect(isWebviewToHostMessage({ type: HOST_TO_WEBVIEW_MESSAGE_TYPES.ready })).toBe(false);
     expect(isWebviewToHostMessage({ type: "unknown" })).toBe(false);
+    expect(
+      isWebviewToHostMessage({
+        type: WEBVIEW_TO_HOST_MESSAGE_TYPES.toggleEnabled,
+        id: SAMPLE_CATALOG_ITEM.id,
+      }),
+    ).toBe(false);
   });
 });
 

@@ -3,8 +3,10 @@ import {
   HOST_TO_WEBVIEW_MESSAGE_TYPES,
   WEBVIEW_TO_HOST_MESSAGE_TYPES,
   type HostCatalogMessage,
+  type HostToggleResultMessage,
   type HostToWebviewMessage,
   type WebviewToHostMessage,
+  type WebviewToggleEnabledMessage,
 } from "./messages.js";
 
 function isRecord(value: unknown): value is Record<string, unknown> {
@@ -40,16 +42,39 @@ function isHostCatalogMessage(value: Record<string, unknown>): value is HostCata
   return isCatalogItemArray(value["skills"]) && isCatalogItemArray(value["rules"]);
 }
 
+function isHostToggleResultMessage(
+  value: Record<string, unknown>,
+): value is HostToggleResultMessage {
+  if (value["type"] !== HOST_TO_WEBVIEW_MESSAGE_TYPES.toggleResult) return false;
+  if (value["ok"] === true) return isCatalogItem(value["item"]);
+  if (value["ok"] !== false) return false;
+  return (
+    typeof value["id"] === "string" &&
+    typeof value["enabled"] === "boolean" &&
+    typeof value["error"] === "string"
+  );
+}
+
+function isWebviewToggleEnabledMessage(
+  value: Record<string, unknown>,
+): value is WebviewToggleEnabledMessage {
+  return (
+    value["type"] === WEBVIEW_TO_HOST_MESSAGE_TYPES.toggleEnabled &&
+    typeof value["id"] === "string" &&
+    typeof value["enabled"] === "boolean"
+  );
+}
+
 export function isHostToWebviewMessage(value: unknown): value is HostToWebviewMessage {
   if (!isRecord(value)) return false;
   if (value["type"] === HOST_TO_WEBVIEW_MESSAGE_TYPES.ready) return true;
-  return isHostCatalogMessage(value);
+  if (isHostCatalogMessage(value)) return true;
+  return isHostToggleResultMessage(value);
 }
 
 export function isWebviewToHostMessage(value: unknown): value is WebviewToHostMessage {
   if (!isRecord(value)) return false;
-  return (
-    value["type"] === WEBVIEW_TO_HOST_MESSAGE_TYPES.ready ||
-    value["type"] === WEBVIEW_TO_HOST_MESSAGE_TYPES.catalogRequest
-  );
+  if (value["type"] === WEBVIEW_TO_HOST_MESSAGE_TYPES.ready) return true;
+  if (value["type"] === WEBVIEW_TO_HOST_MESSAGE_TYPES.catalogRequest) return true;
+  return isWebviewToggleEnabledMessage(value);
 }
