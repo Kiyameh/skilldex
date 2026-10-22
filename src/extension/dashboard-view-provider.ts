@@ -1,7 +1,7 @@
 import type { ExtensionContext, WebviewView, WebviewViewProvider } from "vscode";
-import { Uri } from "vscode";
+import { Uri, workspace } from "vscode";
 import { getWebviewHtml } from "./get-webview-html.js";
-import { startHandshake } from "./host-message-adapter.js";
+import { startHostMessageHandling } from "./host-message-adapter.js";
 
 export class DashboardViewProvider implements WebviewViewProvider {
   public constructor(private readonly extensionContext: ExtensionContext) {}
@@ -16,7 +16,9 @@ export class DashboardViewProvider implements WebviewViewProvider {
 
     webviewView.webview.html = getWebviewHtml(webviewView.webview, this.extensionContext);
 
-    const handshake = startHandshake(webviewView.webview);
-    webviewView.onDidDispose(() => handshake.dispose());
+    const messageHandling = startHostMessageHandling(webviewView.webview, {
+      getWorkspaceRoot: () => workspace.workspaceFolders?.[0]?.uri.fsPath,
+    });
+    webviewView.onDidDispose(() => messageHandling.dispose());
   }
 }

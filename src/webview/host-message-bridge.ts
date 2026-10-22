@@ -27,3 +27,7 @@ export function replyToHostReady(message: HostToWebviewMessage): void {
   if (message.type !== HOST_TO_WEBVIEW_MESSAGE_TYPES.ready) return;
   postToHost({ type: WEBVIEW_TO_HOST_MESSAGE_TYPES.ready });
 }
+
+export function requestCatalog(): void {
+  postToHost({ type: WEBVIEW_TO_HOST_MESSAGE_TYPES.catalogRequest });
+}
