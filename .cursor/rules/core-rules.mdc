@@ -37,7 +37,7 @@ Follow everywhere the clean code principles descibred in @clean-code.mdc
 
 ## 4. UI, Styles & Accessibility (A11y)
 
-- **Native CSS:** All interfaces must be styled using **exclusivelly modern native CSS or CSS Modules**.
+- **Styling:** Skilldex UI (Webview) uses **Tailwind CSS** with React. Prefer Tailwind utility classes for layout and styling; use a small amount of native CSS / CSS Modules only when Tailwind is insufficient (e.g. complex keyframes, Webview-specific overrides).
 - **Accessibility:** Generated HTML must be 100% semantic. Avoid `<div>` when an HTML5 semantic tag exists. Custom interactive elements must include appropriate `aria-*` attributes, `role` definitions, and full keyboard navigation support (`tabindex`, visible focus).
 
 ## 5. Testing & Quality
