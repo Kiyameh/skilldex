@@ -41,7 +41,7 @@ OpenSpec ya está instalado; los artefactos de planificación existen y están v
 ### Out-of-scope
 
 - Changes 2–8 (`host-webview-message-contract`, discovery, dashboard, toggle, open, create, live-sync)
-- Editor WYSIWYG, parsers multiformato, Marketplace, testing automatizado complejo
+- Editor WYSIWYG, parsers multiformato, Marketplace/CI remoto. Tests del scaffold: arnés `testing-harness` (integration de activate/comando).
 - Replanificar o reescribir specs salvo corrección mínima imprescindible (y consulta al usuario si cambia comportamiento)
 - Instalar/definir el tooling global del monorepo (lint/format/husky/etc.) como misión principal
 

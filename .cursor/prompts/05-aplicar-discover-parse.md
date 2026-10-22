@@ -55,7 +55,8 @@ El Host vive en `src/extension/`, el Webview (React+Vite+Tailwind) en `src/webvi
 ### Out-of-scope
 
 - Changes 4–8 (dashboard cards, toggle, open, create, live-sync)
-- UI de cards, mutaciones de disco, FileSystemWatcher, Marketplace
+- UI de cards, mutaciones de disco, FileSystemWatcher, Marketplace/CI remoto
+- Tests: unit de parseo (in-memory/tmp) + integration sobre workspace temporal; no usar el `.cursor/` del repo como fixture de suite
 - Replanificar el MVP; solo corrección mínima de artefactos si choca con `WebviewView` o con el contrato ya implementado
 - Archivar este change sin confirmación explícita del usuario
 - Sobrescribir rules/skills de convención del propio repo SkillDex

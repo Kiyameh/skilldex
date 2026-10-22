@@ -40,7 +40,8 @@ Para mantener el MVP viable, debes ceñirte estrictamente a estos límites:
 - ❌ Editor WYSIWYG / Markdown enriquecido dentro de la Webview (se edita en VS Code nativo).
 - ❌ Soporte multiformato complejo (sin parsers para Copilot, Windsurf o Claude Code en la v0.1).
 - ❌ Métricas de tokens, analíticas o llamadas a APIs de LLM.
-- ❌ Testing automatizado complejo o despliegue automatizado al Marketplace.
+- ❌ Despliegue automatizado al Marketplace o CI remoto.
+- ✅ Testing en pirámide local (Vitest + Extension Host); ver `testing-harness`.
 
 ---
 

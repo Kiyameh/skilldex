@@ -17,7 +17,8 @@ Se auditó el repo (solo `.cursor/` + `openspec/`, sin `package.json` ni código
 ## Decisiones
 
 - **Incluir:** TypeScript strict (`tsconfig.base.json` + root), ESLint 9 flat (TS + React/hooks), Prettier + `eslint-config-prettier`, EditorConfig, `.gitignore`, `.vscode/extensions.json` + `settings.json`, README corto, scripts `typecheck` / `lint` / `lint:fix` / `format` / `format:check`.
-- **Excluir:** Husky/lint-staged, Vitest/e2e, `@vscode/vsce`/CI Marketplace, Nx/Turborepo, apply de changes OpenSpec 1–8, actualizar `css-conventions` a Tailwind.
+- **Excluir (sesión original):** Husky/lint-staged, Vitest/e2e, `@vscode/vsce`/CI Marketplace, Nx/Turborepo, apply de changes OpenSpec 1–8, actualizar `css-conventions` a Tailwind.
+- **Actualización (2026-10-22):** Vitest + `@vscode/test-cli` se instalaron en el change `testing-harness`. Siguen fuera: Husky, vsce, GitHub Actions, Marketplace.
 - **Un solo `package.json`:** identidad `publisher: andoni`, `name: skilldex`, `displayName: SkillDex`; sin scripts `build`/`watch` reales hasta el scaffold.
 - **Stub de typecheck:** `tooling/typecheck-stub.ts` para que `tsc --noEmit` tenga input sin crear `src/extension` ni `src/webview`.
 - **Docs y description en castellano:** `package.json` `description` y `README.md` traducidos tras el setup inicial (inglés).
@@ -50,4 +51,4 @@ Se auditó el repo (solo `.cursor/` + `openspec/`, sin `package.json` ni código
 
 - Aplicar change OpenSpec `scaffold-extension-webview` (fase scaffold / prompt `03-aplicar-scaffold-extension.md`).
 - Actualizar skill `css-conventions` a Tailwind (pendiente histórico, otra sesión).
-- Opcionales no instalados: Husky, Vitest, vsce — solo si se aprueban explícitamente.
+- Opcionales aún no instalados: Husky, vsce. Testing: ver change `testing-harness`.

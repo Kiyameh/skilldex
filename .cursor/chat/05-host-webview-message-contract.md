@@ -21,7 +21,7 @@ Se congeló el contrato tipado Host↔Webview sobre el shell Activity Bar/`Webvi
 - **Transporte:** `webviewView.webview.postMessage` / `onDidReceiveMessage` (no panel de editor). Corrección mínima en `design.md` del change.
 - **Carrera de carga:** reintento corto e idempotente en el Host, porque `postMessage` puede llegar antes de que el script del Webview esté vivo.
 - **Observabilidad:** `console.log("SkillDex handshake complete")` + indicador temporal en el header (`Host: conectado` / `Host: esperando`).
-- **Tests:** no se añadió runner (el repo no tenía Vitest/Jest; el prompt pedía no reinstalar tooling). Calidad: `typecheck` / `lint` / `build` + handshake en F5.
+- **Tests (sesión original):** no se añadió runner. **Actualización (2026-10-22):** el arnés `testing-harness` cubre type-guards, handshake con Webview fake y RTL del indicador; quality gate local `npm test`.
 - **Imports del Host:** rutas relativas con sufijo `.js`. El Host se emite con `tsc` (NodeNext); un alias no se reescribe y rompería el runtime.
 - **Build Host:** `tsconfig.extension.json` pasó a `rootDir: "src"` y `outDir: "out"` para incluir `src/shared/` (`main` sigue en `./out/extension/extension.js`).
 

@@ -27,7 +27,8 @@ Se partió del rol AI-Driven Spec Architect (`00-conceptualizacion.md`) para deb
 - Extensión VS Code: dashboard visual de AI Rules/Skills en `.cursor/rules/` o `.vscode/rules/` (`.mdc` / `.md`).
 - Stack: Extension Host (Node/TS), `gray-matter`, Webview (React+Vite o HTML ligero + Tailwind), `FileSystemWatcher`, `postMessage`.
 - In-scope: cards (título, descripción, globs, estado), toggle 1-click, abrir en editor, crear regla plantilla, live sync.
-- Out-of-scope: WYSIWYG, multiformato (Copilot/Windsurf/Claude), métricas/LLM, testing/despliegue Marketplace complejos.
+- Out-of-scope: WYSIWYG, multiformato (Copilot/Windsurf/Claude), métricas/LLM, Marketplace/CI remoto.
+- **Actualización (2026-10-22):** el testing en pirámide (Vitest + `@vscode/test-cli`, CI local) entra en el MVP vía change `testing-harness`.
 
 ### Estrategias evaluadas (PASO 1)
 

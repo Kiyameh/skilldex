@@ -49,8 +49,9 @@ Se instaló OpenSpec en el repo (`root` válido, schema `spec-driven`) y se gene
 
 ### In-scope / out-of-scope (recordatorio)
 
-- In: discovery, cards, toggle, open, create Rule/Skill, live sync.
-- Out: WYSIWYG, parsers multiformato, métricas/LLM, testing/Marketplace complejos.
+- In: discovery, cards, toggle, open, create Rule/Skill, live sync, pirámide de tests local.
+- Out: WYSIWYG, parsers multiformato, métricas/LLM, Marketplace/CI remoto.
+- **Actualización (2026-10-22):** pirámide de tests local in-scope (`testing-harness`); cada `tasks.md` posterior exige tests.
 
 ## Archivos y referencias
 

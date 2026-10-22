@@ -26,12 +26,24 @@ npm run build          # Host (tsc) + Webview (Vite)
 npm run watch          # Watch Host + Webview
 npm run compile        # Solo Extension Host
 npm run build:webview  # Solo Webview
-npm run typecheck      # TypeScript strict (Host + Webview)
+npm run typecheck      # TypeScript strict (Host + Webview + integration tests)
+npm run test:unit      # Vitest (shared, Host puro, Webview)
+npm run test:unit:watch
+npm run test:integration  # Extension Host (@vscode/test-cli)
+npm test               # unit && integration (gate local)
 npm run lint
 npm run lint:fix
 npm run format
 npm run format:check
 ```
+
+## Tests
+
+Pirámide local, sin GitHub Actions:
+
+- Colocalizados: `foo.test.ts` / `foo.test.tsx` junto al módulo (Vitest).
+- Integration: `foo.integration.test.ts` si el test importa el runtime `vscode` (Mocha en Extension Development Host). Vitest los ignora.
+- Fixtures de suite: in-memory o directorio temporal. `npm test` no usa el `.cursor/` de este repositorio.
 
 ## Estructura
 

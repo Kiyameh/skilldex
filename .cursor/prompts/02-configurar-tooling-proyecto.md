@@ -16,7 +16,7 @@ Esta misión es **tooling e higiene del repo**, no implementar features del dash
 - **Identidad:** publisher `andoni`, name `skilldex`, displayName `SkillDex`.
 - **Estilo UI:** Tailwind (no CSS Modules como default); `core-rules.mdc` ya lo refleja.
 - **Calidad:** TypeScript `strict: true`; prohibido `any`; no bypass de linter salvo petición explícita.
-- **Testing/Marketplace complejos:** out-of-scope del MVP de producto; el tooling puede incluir un mínimo razonable (p. ej. typecheck script) pero no un framework de e2e/Marketplace CI completo salvo que el usuario lo apruebe.
+- **Testing:** pirámide local in-scope (`testing-harness`: Vitest + `@vscode/test-cli`). Marketplace publish y GitHub Actions siguen fuera salvo aprobación explícita.
 - **Orden respecto al scaffold:** idealmente esta config deja scripts/base que el scaffold pueda reutilizar; coordina sin duplicar `package.json` contradictorio si el otro agente ya creó uno.
 
 ### Stack y convenciones
@@ -83,7 +83,7 @@ Esta misión es **tooling e higiene del repo**, no implementar features del dash
    - EditorConfig
    - Scripts npm (`lint`, `format`, `typecheck`, `build` placeholders si aún no hay código)
    - `.gitignore` / `.vscode/extensions.json` recomendaciones
-   - Opcional (marcar como opcional): Husky/lint-staged, Vitest mínimo, `vsce`/`@vscode/vsce` solo packaging local
+   - Opcional: Husky/lint-staged, `vsce`/`@vscode/vsce` solo packaging local. Testing: ya cubierto por `testing-harness`.
 4. **Detente y espera confirmación** del usuario (qué incluir / excluir / versiones preferidas).
 5. Instala y configura solo lo aprobado; evita configs gigantes o reglas que bypassen strict.
 6. Si el scaffold ya creó `package.json`, fusiona scripts/deps sin romper el build de la extensión.

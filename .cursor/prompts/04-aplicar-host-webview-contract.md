@@ -46,7 +46,7 @@ El scaffold aporta:
 ### Out-of-scope
 
 - Changes 3–8 (discovery, dashboard cards, toggle, open, create, live-sync)
-- UI de cards, parsers, mutaciones de disco, Marketplace, tests e2e complejos
+- UI de cards, parsers, mutaciones de disco, Marketplace/CI remoto. Tests del contrato: arnés `testing-harness` (type-guards, handshake, RTL).
 - Replanificar el MVP; solo corrección mínima de artefactos del change 2 si choca con WebviewView
 - Archivar este change sin confirmación explícita del usuario
 

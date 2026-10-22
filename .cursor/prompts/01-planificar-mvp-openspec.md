@@ -45,7 +45,7 @@ Ya se decidió la metodología de troceado y el uso de OpenSpec como capa de pro
 - Editor WYSIWYG / Markdown enriquecido en la Webview
 - Parsers multiformato (Copilot, Windsurf, Claude Code, etc.) en v0.1
 - Métricas de tokens, analíticas o APIs de LLM
-- Testing automatizado complejo o despliegue al Marketplace
+- Despliegue al Marketplace o CI remoto (GitHub Actions). El testing en pirámide local es in-scope (change `testing-harness`).
 
 ## Instrucciones adicionales del usuario
 
