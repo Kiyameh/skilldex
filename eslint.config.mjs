@@ -20,7 +20,7 @@ export default tseslint.config(
   eslint.configs.recommended,
   ...tseslint.configs.recommended,
   {
-    files: ["src/extension/**/*.{ts,tsx}", "tooling/**/*.ts"],
+    files: ["src/extension/**/*.{ts,tsx}", "src/shared/**/*.ts", "tooling/**/*.ts"],
     languageOptions: {
       globals: {
         ...globals.node,

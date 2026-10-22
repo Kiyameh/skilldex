@@ -1,8 +1,8 @@
 {
   "extends": "./tsconfig.base.json",
   "compilerOptions": {
-    "rootDir": "src/extension",
-    "outDir": "out/extension",
+    "rootDir": "src",
+    "outDir": "out",
     "lib": ["ES2022"],
     "types": ["node", "vscode"],
     "module": "NodeNext",
@@ -11,6 +11,6 @@
     "declaration": false,
     "declarationMap": false
   },
-  "include": ["src/extension/**/*.ts"],
+  "include": ["src/extension/**/*.ts", "src/shared/**/*.ts"],
   "exclude": ["node_modules", "dist", "out", "src/webview"]
 }

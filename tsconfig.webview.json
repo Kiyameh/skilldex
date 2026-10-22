@@ -10,6 +10,11 @@
     "declaration": false,
     "declarationMap": false
   },
-  "include": ["src/webview/**/*.ts", "src/webview/**/*.tsx", "src/webview/**/*.d.ts"],
+  "include": [
+    "src/webview/**/*.ts",
+    "src/webview/**/*.tsx",
+    "src/webview/**/*.d.ts",
+    "src/shared/**/*.ts"
+  ],
   "exclude": ["node_modules", "dist", "out", "src/webview/vite.config.ts"]
 }
