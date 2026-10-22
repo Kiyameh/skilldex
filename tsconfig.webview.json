@@ -22,6 +22,7 @@
     "out",
     "src/webview/vite.config.ts",
     "src/webview/setup-tests.ts",
+    "src/webview/vitest-env.d.ts",
     "src/**/*.test.ts",
     "src/**/*.test.tsx"
   ]

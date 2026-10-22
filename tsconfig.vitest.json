@@ -1,0 +1,7 @@
+{
+  "extends": "./tsconfig.webview.json",
+  "compilerOptions": {
+    "types": ["node"]
+  },
+  "exclude": ["node_modules", "dist", "out", "src/webview/vite.config.ts"]
+}

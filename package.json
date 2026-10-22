@@ -48,7 +48,7 @@
     "watch:webview": "vite build --config src/webview/vite.config.ts --watch",
     "build": "npm run compile && npm run build:webview",
     "watch": "concurrently -n host,webview -c blue,magenta \"npm run watch:host\" \"npm run watch:webview\"",
-    "typecheck": "tsc --noEmit -p tsconfig.extension.json && tsc --noEmit -p tsconfig.webview.json && tsc --noEmit -p tsconfig.integration.json",
+    "typecheck": "tsc --noEmit -p tsconfig.extension.json && tsc --noEmit -p tsconfig.webview.json && tsc --noEmit -p tsconfig.vitest.json && tsc --noEmit -p tsconfig.integration.json",
     "test:unit": "vitest run",
     "test:unit:watch": "vitest",
     "test:integration": "npm run compile && tsc -p tsconfig.integration.json && vscode-test",
