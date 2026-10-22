@@ -1,40 +1,39 @@
+import { ConnectionBadge } from "./connection-badge";
+import { RulesSection } from "./rules-section";
+import { SkillDexLogo } from "./skilldex-logo";
+import { SkillsSection } from "./skills-section";
 import { useCatalog } from "./use-catalog";
 import { useHostHandshake } from "./use-host-handshake";
+
+const CATALOG_WAITING_LABEL = "Catálogo: esperando…";
 
 export function App() {
   const handshakeStatus = useHostHandshake();
   const catalog = useCatalog(handshakeStatus);
-  const handshakeLabel = handshakeStatus === "connected" ? "Host: conectado" : "Host: esperando";
-  const skillCount = catalog?.skills.length ?? 0;
-  const ruleCount = catalog?.rules.length ?? 0;
-  const countsLabel =
-    catalog === undefined
-      ? "Catálogo: esperando…"
-      : `${skillCount} skills / ${ruleCount} rules`;
 
   return (
-    <div className="flex min-h-screen flex-col">
-      <header className="border-b border-(--vscode-sideBarSectionHeader-border,#3c3c3c) px-4 py-3">
-        <h1 className="m-0 text-base font-semibold tracking-wide">SkillDex</h1>
-        <p className="m-0 mt-1 text-xs opacity-70">
-          Panel visual para Rules y Skills bajo .cursor/
-        </p>
-        <p className="m-0 mt-2 text-xs opacity-80" role="status" aria-live="polite">
-          {handshakeLabel}
-        </p>
+    <div className="flex h-full min-h-0 flex-col">
+      <header className="flex shrink-0 items-center justify-between gap-2 border-b border-(--vscode-sideBarSectionHeader-border,#3c3c3c) px-4 py-3">
+        <div className="flex min-w-0 items-center gap-2">
+          <SkillDexLogo className="shrink-0 opacity-90" />
+          <h1 className="m-0 text-base font-semibold tracking-wide">SkillDex</h1>
+        </div>
+        <ConnectionBadge status={handshakeStatus} />
       </header>
-      <main className="flex-1 px-4 py-4" aria-label="SkillDex dashboard">
-        <p className="m-0 text-xs opacity-80" aria-live="polite">
-          {countsLabel}
-        </p>
-        {catalog !== undefined ? (
-          <pre
-            className="mt-3 max-h-96 overflow-auto rounded border border-(--vscode-sideBarSectionHeader-border,#3c3c3c) p-2 text-[10px] leading-snug whitespace-pre-wrap break-all"
-            aria-label="Catalog dump"
-          >
-            {JSON.stringify(catalog, null, 2)}
-          </pre>
-        ) : null}
+      <main
+        className="flex min-h-0 flex-1 flex-col gap-3 px-4 py-3"
+        aria-label="SkillDex dashboard"
+      >
+        {catalog === undefined ? (
+          <p className="m-0 text-xs opacity-80" aria-live="polite">
+            {CATALOG_WAITING_LABEL}
+          </p>
+        ) : (
+          <>
+            <SkillsSection skills={catalog.skills} />
+            <RulesSection rules={catalog.rules} />
+          </>
+        )}
       </main>
     </div>
   );

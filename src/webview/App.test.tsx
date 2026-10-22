@@ -1,4 +1,4 @@
-import { render, screen } from "@testing-library/react";
+import { render, screen, within } from "@testing-library/react";
 import { act } from "react";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { HOST_TO_WEBVIEW_MESSAGE_TYPES, WEBVIEW_TO_HOST_MESSAGE_TYPES } from "../shared/index.js";
@@ -19,13 +19,13 @@ describe("App", () => {
     postMessage.mockReset();
   });
 
-  it("shows waiting handshake status by default", () => {
+  it("shows disconnected badge by default", () => {
     render(<App />);
 
-    expect(screen.getByRole("status")).toHaveTextContent("Host: esperando");
+    expect(screen.getByRole("status")).toHaveTextContent("desconectado");
   });
 
-  it("shows connected handshake status after a host ready message", () => {
+  it("shows connected badge after a host ready message", () => {
     render(<App />);
 
     act(() => {
@@ -36,11 +36,11 @@ describe("App", () => {
       );
     });
 
-    expect(screen.getByRole("status")).toHaveTextContent("Host: conectado");
+    expect(screen.getByRole("status")).toHaveTextContent("conectado");
     expect(postMessage).toHaveBeenCalledWith({ type: WEBVIEW_TO_HOST_MESSAGE_TYPES.ready });
   });
 
-  it("requests the catalog after handshake and renders counts plus dump", () => {
+  it("requests the catalog after handshake and renders Skills before Rules", () => {
     render(<App />);
 
     act(() => {
@@ -54,6 +54,7 @@ describe("App", () => {
     expect(postMessage).toHaveBeenCalledWith({
       type: WEBVIEW_TO_HOST_MESSAGE_TYPES.catalogRequest,
     });
+    expect(screen.getByText("Catálogo: esperando…")).toBeInTheDocument();
 
     act(() => {
       window.dispatchEvent(
@@ -85,9 +86,44 @@ describe("App", () => {
       );
     });
 
-    expect(screen.getByText("1 skills / 1 rules")).toBeInTheDocument();
-    expect(screen.getByLabelText("Catalog dump")).toHaveTextContent("demo-skill");
-    expect(screen.getByLabelText("Catalog dump")).toHaveTextContent("example-rule");
+    const skillsHeading = screen.getByRole("heading", { name: "Skills", level: 2 });
+    const rulesHeading = screen.getByRole("heading", { name: "Rules", level: 2 });
+    expect(
+      skillsHeading.compareDocumentPosition(rulesHeading) & Node.DOCUMENT_POSITION_FOLLOWING,
+    ).toBeTruthy();
+
+    expect(screen.getByRole("article", { name: "demo-skill" })).toBeInTheDocument();
+    expect(screen.getByRole("article", { name: "example-rule" })).toBeInTheDocument();
+    expect(screen.queryByLabelText("Catalog dump")).not.toBeInTheDocument();
+    expect(screen.queryByText(/skills \/ .* rules/)).not.toBeInTheDocument();
+  });
+
+  it("shows empty states for both sections when the catalog is empty", () => {
+    render(<App />);
+
+    act(() => {
+      window.dispatchEvent(
+        new MessageEvent("message", {
+          data: { type: HOST_TO_WEBVIEW_MESSAGE_TYPES.ready },
+        }),
+      );
+    });
+
+    act(() => {
+      window.dispatchEvent(
+        new MessageEvent("message", {
+          data: {
+            type: HOST_TO_WEBVIEW_MESSAGE_TYPES.catalog,
+            skills: [],
+            rules: [],
+          },
+        }),
+      );
+    });
+
+    const main = screen.getByRole("main", { name: "SkillDex dashboard" });
+    expect(within(main).getByText("No hay skills todavía")).toBeInTheDocument();
+    expect(within(main).getByText("No hay rules todavía")).toBeInTheDocument();
   });
 
   it("does not mark handshake connected on catalog messages alone", () => {
@@ -105,7 +141,7 @@ describe("App", () => {
       );
     });
 
-    expect(screen.getByRole("status")).toHaveTextContent("Host: esperando");
+    expect(screen.getByRole("status")).toHaveTextContent("desconectado");
     expect(postMessage).not.toHaveBeenCalled();
   });
 });
