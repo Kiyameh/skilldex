@@ -1,8 +1,4 @@
-import {
-  CATALOG_ITEM_KINDS,
-  type CatalogItem,
-  type CatalogItemKind,
-} from "./catalog.js";
+import { CATALOG_ITEM_KINDS, type CatalogItem, type CatalogItemKind } from "./catalog.js";
 import {
   HOST_TO_WEBVIEW_MESSAGE_TYPES,
   WEBVIEW_TO_HOST_MESSAGE_TYPES,

@@ -37,9 +37,15 @@ describe("discoverCatalog", () => {
     );
     await writeFile(
       path.join(root, ".cursor", "rules", "nested", "nested-rule.md"),
-      ["---", "description: Nested rule", "globs:", "  - src/**", "  - test/**", "---", "body"].join(
-        "\n",
-      ),
+      [
+        "---",
+        "description: Nested rule",
+        "globs:",
+        "  - src/**",
+        "  - test/**",
+        "---",
+        "body",
+      ].join("\n"),
     );
     await writeFile(
       path.join(root, ".cursor", "skills", "nested", "demo-skill", "SKILL.md"),
@@ -125,7 +131,7 @@ describe("discoverCatalog", () => {
 
     await writeFile(
       path.join(root, ".cursor", "rules", "string-enabled.mdc"),
-      ['---', 'enabled: "false"', "title: Still Enabled", "---", "body"].join("\n"),
+      ["---", 'enabled: "false"', "title: Still Enabled", "---", "body"].join("\n"),
     );
     await writeFile(
       path.join(root, ".cursor", "skills", "folder-named", "SKILL.md"),

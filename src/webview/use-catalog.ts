@@ -1,8 +1,5 @@
 import { useEffect, useState } from "react";
-import {
-  HOST_TO_WEBVIEW_MESSAGE_TYPES,
-  type CatalogPayload,
-} from "../shared/index.js";
+import { HOST_TO_WEBVIEW_MESSAGE_TYPES, type CatalogPayload } from "../shared/index.js";
 import { requestCatalog, subscribeToHostMessages } from "./host-message-bridge";
 import type { HandshakeStatus } from "./use-host-handshake";
 

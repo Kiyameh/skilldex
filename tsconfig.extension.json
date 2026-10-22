@@ -12,12 +12,5 @@
     "declarationMap": false
   },
   "include": ["src/extension/**/*.ts", "src/shared/**/*.ts"],
-  "exclude": [
-    "node_modules",
-    "dist",
-    "out",
-    "src/webview",
-    "src/**/*.test.ts",
-    "src/**/*.test.tsx"
-  ]
+  "exclude": ["node_modules", "dist", "out", "src/webview", "src/**/*.test.ts", "src/**/*.test.tsx"]
 }

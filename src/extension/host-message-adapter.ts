@@ -36,9 +36,7 @@ async function replyWithCatalog(
 ): Promise<void> {
   const workspaceRoot = getWorkspaceRoot();
   const catalog: CatalogPayload =
-    workspaceRoot === undefined
-      ? { skills: [], rules: [] }
-      : await discoverCatalog(workspaceRoot);
+    workspaceRoot === undefined ? { skills: [], rules: [] } : await discoverCatalog(workspaceRoot);
 
   postHostMessage(webview, {
     type: HOST_TO_WEBVIEW_MESSAGE_TYPES.catalog,

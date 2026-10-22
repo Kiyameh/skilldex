@@ -70,7 +70,9 @@ async function discoverRules(workspaceRoot: string): Promise<CatalogItem[]> {
   const rulesRoot = path.join(workspaceRoot, RULES_DIRECTORY);
   const files = await collectFilesRecursively(rulesRoot);
   const items = await Promise.all(
-    files.filter(isRuleFile).map((filePath) => mapFileToCatalogItem(workspaceRoot, filePath, "rule")),
+    files
+      .filter(isRuleFile)
+      .map((filePath) => mapFileToCatalogItem(workspaceRoot, filePath, "rule")),
   );
   return items.filter((item): item is CatalogItem => item !== undefined);
 }
@@ -79,7 +81,9 @@ async function discoverSkills(workspaceRoot: string): Promise<CatalogItem[]> {
   const skillsRoot = path.join(workspaceRoot, SKILLS_DIRECTORY);
   const files = await collectFilesRecursively(skillsRoot);
   const items = await Promise.all(
-    files.filter(isSkillFile).map((filePath) => mapFileToCatalogItem(workspaceRoot, filePath, "skill")),
+    files
+      .filter(isSkillFile)
+      .map((filePath) => mapFileToCatalogItem(workspaceRoot, filePath, "skill")),
   );
   return items.filter((item): item is CatalogItem => item !== undefined);
 }
