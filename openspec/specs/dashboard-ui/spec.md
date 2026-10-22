@@ -2,7 +2,7 @@
 
 ## Purpose
 
-Renderizar el dashboard de solo lectura con dos secciones diferenciadas (Skills primaria, Rules secundaria) y cards de metadatos habituales.
+Renderizar el dashboard con dos secciones diferenciadas (Skills primaria, Rules secundaria), cards de metadatos habituales y controles de toggle de `enabled`.
 
 ## Requirements
 
@@ -35,9 +35,9 @@ Each section SHALL show an empty state when its list is empty.
 - **WHEN** the catalog contains zero skills
 - **THEN** the Skills section MUST show an empty-state message (not a blank void)
 
-### Requirement: Read-only in this change
-This capability SHALL NOT require mutation controls to be functional; display of state is sufficient. Mutation actions belong to later changes.
+### Requirement: Cards expose toggle control
+Skill and Rule cards SHALL include an accessible toggle control wired to the toggle message contract.
 
-#### Scenario: Dashboard loads catalog for display
-- **WHEN** the Webview receives a catalog payload
-- **THEN** it MUST render sections and cards without requiring toggle/create/open to work yet
+#### Scenario: Toggle is operable from card
+- **WHEN** a catalog card is rendered after this change
+- **THEN** it MUST provide a keyboard-accessible control that initiates the toggle request

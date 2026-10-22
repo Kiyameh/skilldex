@@ -35,3 +35,10 @@ The shared contract SHALL define a Webview→Host message to request the catalog
 - **WHEN** the Webview needs the current catalog
 - **THEN** it MUST send the typed request message defined by the contract
 - **AND** the Host MUST respond with a typed catalog payload containing `skills` and `rules` arrays
+
+### Requirement: Toggle request and result messages
+The shared contract SHALL define a Webview→Host toggle request (item identity + target enabled state) and a Host→Webview result (success with updated item, or failure with error).
+
+#### Scenario: Toggle round-trip
+- **WHEN** the Webview sends a toggle request for a known catalog item
+- **THEN** the Host MUST respond with a typed success or failure result message
