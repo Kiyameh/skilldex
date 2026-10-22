@@ -31,3 +31,7 @@ export function replyToHostReady(message: HostToWebviewMessage): void {
 export function requestCatalog(): void {
   postToHost({ type: WEBVIEW_TO_HOST_MESSAGE_TYPES.catalogRequest });
 }
+
+export function requestToggleEnabled(id: string, enabled: boolean): void {
+  postToHost({ type: WEBVIEW_TO_HOST_MESSAGE_TYPES.toggleEnabled, id, enabled });
+}

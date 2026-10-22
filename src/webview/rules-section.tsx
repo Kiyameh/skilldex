@@ -3,11 +3,13 @@ import { RuleCard } from "./rule-card";
 
 interface RulesSectionProps {
   rules: CatalogItem[];
+  onToggleEnabled: (item: CatalogItem, nextEnabled: boolean) => void;
+  pendingToggleIds?: ReadonlySet<string>;
 }
 
 const EMPTY_RULES_MESSAGE = "No hay rules todavía";
 
-export function RulesSection({ rules }: RulesSectionProps) {
+export function RulesSection({ rules, onToggleEnabled, pendingToggleIds }: RulesSectionProps) {
   const isEmpty = rules.length === 0;
 
   return (
@@ -25,7 +27,11 @@ export function RulesSection({ rules }: RulesSectionProps) {
           <ul className="m-0 flex list-none flex-col gap-2 p-0">
             {rules.map((rule) => (
               <li key={rule.id}>
-                <RuleCard item={rule} />
+                <RuleCard
+                  item={rule}
+                  onToggleEnabled={onToggleEnabled}
+                  toggleDisabled={pendingToggleIds?.has(rule.id) ?? false}
+                />
               </li>
             ))}
           </ul>

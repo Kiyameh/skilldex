@@ -1,5 +1,5 @@
 import { render, screen } from "@testing-library/react";
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 import type { CatalogItem } from "../shared/index.js";
 import { RulesSection } from "./rules-section";
 
@@ -14,14 +14,14 @@ const sampleRule: CatalogItem = {
 
 describe("RulesSection", () => {
   it("renders a Rules heading and rule cards", () => {
-    render(<RulesSection rules={[sampleRule]} />);
+    render(<RulesSection rules={[sampleRule]} onToggleEnabled={vi.fn()} />);
 
     expect(screen.getByRole("heading", { name: "Rules", level: 2 })).toBeInTheDocument();
     expect(screen.getByRole("article", { name: "example-rule" })).toBeInTheDocument();
   });
 
   it("shows an empty state when there are no rules", () => {
-    render(<RulesSection rules={[]} />);
+    render(<RulesSection rules={[]} onToggleEnabled={vi.fn()} />);
 
     expect(screen.getByRole("heading", { name: "Rules", level: 2 })).toBeInTheDocument();
     expect(screen.getByText("No hay rules todavía")).toBeInTheDocument();

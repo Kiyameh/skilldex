@@ -1,14 +1,16 @@
 import type { CatalogItem } from "../shared/index.js";
-import { EnabledLed } from "./enabled-led";
+import { EnabledToggle } from "./enabled-toggle";
 
 interface RuleCardProps {
   item: CatalogItem;
+  onToggleEnabled: (item: CatalogItem, nextEnabled: boolean) => void;
+  toggleDisabled?: boolean;
 }
 
 const MISSING_DESCRIPTION = "Sin descripción";
 const EMPTY_GLOBS_LABEL = "Sin globs";
 
-export function RuleCard({ item }: RuleCardProps) {
+export function RuleCard({ item, onToggleEnabled, toggleDisabled = false }: RuleCardProps) {
   const title = item.title ?? item.id;
   const description = item.description ?? MISSING_DESCRIPTION;
   const globs = item.globs ?? [];
@@ -16,12 +18,16 @@ export function RuleCard({ item }: RuleCardProps) {
 
   return (
     <article
-      className="rounded border border-(--vscode-sideBarSectionHeader-border,#3c3c3c) px-3 py-2"
+      className="group rounded border border-(--vscode-sideBarSectionHeader-border,#3c3c3c) px-3 py-2"
       aria-label={title}
     >
       <header className="flex items-start justify-between gap-2">
         <h3 className="m-0 text-sm font-medium">{title}</h3>
-        <EnabledLed enabled={item.enabled} />
+        <EnabledToggle
+          enabled={item.enabled}
+          disabled={toggleDisabled}
+          onToggle={(nextEnabled) => onToggleEnabled(item, nextEnabled)}
+        />
       </header>
       <p className="m-0 mt-1 text-xs opacity-80">{description}</p>
       {hasGlobs ? (

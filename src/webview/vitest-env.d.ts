@@ -8,6 +8,8 @@ declare module "vitest" {
   // Extend Matchers instead until @testing-library/jest-dom ships Vitest 5 support.
   // The unused second type param must match Vitest's Matchers<R, T> for declaration merging.
   // eslint-disable-next-line @typescript-eslint/no-empty-object-type, @typescript-eslint/no-unused-vars -- module augmentation shape
-  interface Matchers<R extends void | Promise<void>, T = unknown>
-    extends TestingLibraryMatchers<AsymmetricMatcher, R> {}
+  interface Matchers<R extends void | Promise<void>, T = unknown> extends TestingLibraryMatchers<
+    AsymmetricMatcher,
+    R
+  > {}
 }

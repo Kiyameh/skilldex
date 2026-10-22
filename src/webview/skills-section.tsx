@@ -3,11 +3,13 @@ import { SkillCard } from "./skill-card";
 
 interface SkillsSectionProps {
   skills: CatalogItem[];
+  onToggleEnabled: (item: CatalogItem, nextEnabled: boolean) => void;
+  pendingToggleIds?: ReadonlySet<string>;
 }
 
 const EMPTY_SKILLS_MESSAGE = "No hay skills todavía";
 
-export function SkillsSection({ skills }: SkillsSectionProps) {
+export function SkillsSection({ skills, onToggleEnabled, pendingToggleIds }: SkillsSectionProps) {
   const isEmpty = skills.length === 0;
 
   return (
@@ -22,7 +24,11 @@ export function SkillsSection({ skills }: SkillsSectionProps) {
           <ul className="m-0 flex list-none flex-col gap-2 p-0">
             {skills.map((skill) => (
               <li key={skill.id}>
-                <SkillCard item={skill} />
+                <SkillCard
+                  item={skill}
+                  onToggleEnabled={onToggleEnabled}
+                  toggleDisabled={pendingToggleIds?.has(skill.id) ?? false}
+                />
               </li>
             ))}
           </ul>

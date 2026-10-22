@@ -1,10 +1,52 @@
-import { useEffect, useState } from "react";
-import { HOST_TO_WEBVIEW_MESSAGE_TYPES, type CatalogPayload } from "../shared/index.js";
-import { requestCatalog, subscribeToHostMessages } from "./host-message-bridge";
+import { useCallback, useEffect, useRef, useState } from "react";
+import {
+  HOST_TO_WEBVIEW_MESSAGE_TYPES,
+  type CatalogItem,
+  type CatalogPayload,
+} from "../shared/index.js";
+import {
+  requestCatalog,
+  requestToggleEnabled,
+  subscribeToHostMessages,
+} from "./host-message-bridge";
 import type { HandshakeStatus } from "./use-host-handshake";
 
-export function useCatalog(handshakeStatus: HandshakeStatus): CatalogPayload | undefined {
+export interface UseCatalogResult {
+  catalog: CatalogPayload | undefined;
+  toggleError: string | undefined;
+  pendingToggleIds: ReadonlySet<string>;
+  toggleItemEnabled: (item: CatalogItem, nextEnabled: boolean) => void;
+  clearToggleError: () => void;
+}
+
+function patchItemEnabled(
+  catalog: CatalogPayload,
+  itemId: string,
+  enabled: boolean,
+): CatalogPayload {
+  const patchList = (items: CatalogItem[]): CatalogItem[] =>
+    items.map((entry) => (entry.id === itemId ? { ...entry, enabled } : entry));
+
+  return {
+    skills: patchList(catalog.skills),
+    rules: patchList(catalog.rules),
+  };
+}
+
+function replaceCatalogItem(catalog: CatalogPayload, item: CatalogItem): CatalogPayload {
+  const replaceInList = (items: CatalogItem[]): CatalogItem[] =>
+    items.map((entry) => (entry.id === item.id ? item : entry));
+
+  if (item.kind === "skill") return { skills: replaceInList(catalog.skills), rules: catalog.rules };
+
+  return { skills: catalog.skills, rules: replaceInList(catalog.rules) };
+}
+
+export function useCatalog(handshakeStatus: HandshakeStatus): UseCatalogResult {
   const [catalog, setCatalog] = useState<CatalogPayload | undefined>(undefined);
+  const [toggleError, setToggleError] = useState<string | undefined>(undefined);
+  const [pendingToggleIds, setPendingToggleIds] = useState<ReadonlySet<string>>(() => new Set());
+  const latestTargetByIdRef = useRef<Map<string, boolean>>(new Map());
 
   useEffect(() => {
     if (handshakeStatus !== "connected") return;
@@ -12,13 +54,69 @@ export function useCatalog(handshakeStatus: HandshakeStatus): CatalogPayload | u
     requestCatalog();
 
     return subscribeToHostMessages((message) => {
-      if (message.type !== HOST_TO_WEBVIEW_MESSAGE_TYPES.catalog) return;
-      setCatalog({
-        skills: message.skills,
-        rules: message.rules,
+      if (message.type === HOST_TO_WEBVIEW_MESSAGE_TYPES.catalog) {
+        setCatalog({
+          skills: message.skills,
+          rules: message.rules,
+        });
+        return;
+      }
+
+      if (message.type !== HOST_TO_WEBVIEW_MESSAGE_TYPES.toggleResult) return;
+
+      if (message.ok) {
+        const latestTarget = latestTargetByIdRef.current.get(message.item.id);
+        if (latestTarget !== message.item.enabled) return;
+
+        latestTargetByIdRef.current.delete(message.item.id);
+        setPendingToggleIds((previous) => {
+          const next = new Set(previous);
+          next.delete(message.item.id);
+          return next;
+        });
+        setCatalog((previous) =>
+          previous === undefined ? previous : replaceCatalogItem(previous, message.item),
+        );
+        return;
+      }
+
+      const latestTarget = latestTargetByIdRef.current.get(message.id);
+      if (latestTarget !== message.enabled) return;
+
+      latestTargetByIdRef.current.delete(message.id);
+      setPendingToggleIds((previous) => {
+        const next = new Set(previous);
+        next.delete(message.id);
+        return next;
       });
+      setCatalog((previous) =>
+        previous === undefined
+          ? previous
+          : patchItemEnabled(previous, message.id, !message.enabled),
+      );
+      setToggleError(message.error);
     });
   }, [handshakeStatus]);
 
-  return catalog;
+  const toggleItemEnabled = useCallback((item: CatalogItem, nextEnabled: boolean) => {
+    latestTargetByIdRef.current.set(item.id, nextEnabled);
+    setToggleError(undefined);
+    setPendingToggleIds((previous) => new Set(previous).add(item.id));
+    setCatalog((previous) =>
+      previous === undefined ? previous : patchItemEnabled(previous, item.id, nextEnabled),
+    );
+    requestToggleEnabled(item.id, nextEnabled);
+  }, []);
+
+  const clearToggleError = useCallback(() => {
+    setToggleError(undefined);
+  }, []);
+
+  return {
+    catalog,
+    toggleError,
+    pendingToggleIds,
+    toggleItemEnabled,
+    clearToggleError,
+  };
 }

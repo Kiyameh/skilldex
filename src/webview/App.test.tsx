@@ -1,8 +1,48 @@
-import { render, screen, within } from "@testing-library/react";
+import { fireEvent, render, screen, within } from "@testing-library/react";
 import { act } from "react";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { HOST_TO_WEBVIEW_MESSAGE_TYPES, WEBVIEW_TO_HOST_MESSAGE_TYPES } from "../shared/index.js";
 import { App } from "./App";
+
+const SAMPLE_SKILL = {
+  id: ".cursor/skills/demo/SKILL.md",
+  kind: "skill" as const,
+  path: "/tmp/.cursor/skills/demo/SKILL.md",
+  enabled: true,
+  title: "demo-skill",
+  description: "Demo",
+};
+
+const SAMPLE_RULE = {
+  id: ".cursor/rules/example.mdc",
+  kind: "rule" as const,
+  path: "/tmp/.cursor/rules/example.mdc",
+  enabled: false,
+  title: "example-rule",
+  globs: [] as string[],
+};
+
+function connectAndLoadCatalog(): void {
+  act(() => {
+    window.dispatchEvent(
+      new MessageEvent("message", {
+        data: { type: HOST_TO_WEBVIEW_MESSAGE_TYPES.ready },
+      }),
+    );
+  });
+
+  act(() => {
+    window.dispatchEvent(
+      new MessageEvent("message", {
+        data: {
+          type: HOST_TO_WEBVIEW_MESSAGE_TYPES.catalog,
+          skills: [SAMPLE_SKILL],
+          rules: [SAMPLE_RULE],
+        },
+      }),
+    );
+  });
+}
 
 const postMessage = vi.fn();
 
@@ -61,26 +101,8 @@ describe("App", () => {
         new MessageEvent("message", {
           data: {
             type: HOST_TO_WEBVIEW_MESSAGE_TYPES.catalog,
-            skills: [
-              {
-                id: ".cursor/skills/demo/SKILL.md",
-                kind: "skill",
-                path: "/tmp/.cursor/skills/demo/SKILL.md",
-                enabled: true,
-                title: "demo-skill",
-                description: "Demo",
-              },
-            ],
-            rules: [
-              {
-                id: ".cursor/rules/example.mdc",
-                kind: "rule",
-                path: "/tmp/.cursor/rules/example.mdc",
-                enabled: false,
-                title: "example-rule",
-                globs: [],
-              },
-            ],
+            skills: [SAMPLE_SKILL],
+            rules: [SAMPLE_RULE],
           },
         }),
       );
@@ -143,5 +165,61 @@ describe("App", () => {
 
     expect(screen.getByRole("status")).toHaveTextContent("desconectado");
     expect(postMessage).not.toHaveBeenCalled();
+  });
+
+  it("optimistically toggles a skill and keeps the state after success", () => {
+    render(<App />);
+    connectAndLoadCatalog();
+
+    const skillCard = screen.getByRole("article", { name: "demo-skill" });
+    fireEvent.click(within(skillCard).getByRole("switch", { name: "Activa" }));
+
+    expect(postMessage).toHaveBeenCalledWith({
+      type: WEBVIEW_TO_HOST_MESSAGE_TYPES.toggleEnabled,
+      id: SAMPLE_SKILL.id,
+      enabled: false,
+    });
+    expect(within(skillCard).getByRole("switch", { name: "Inactiva" })).toBeInTheDocument();
+
+    act(() => {
+      window.dispatchEvent(
+        new MessageEvent("message", {
+          data: {
+            type: HOST_TO_WEBVIEW_MESSAGE_TYPES.toggleResult,
+            ok: true,
+            item: { ...SAMPLE_SKILL, enabled: false },
+          },
+        }),
+      );
+    });
+
+    expect(within(skillCard).getByRole("switch", { name: "Inactiva" })).toBeInTheDocument();
+    expect(screen.queryByRole("alert")).not.toBeInTheDocument();
+  });
+
+  it("reverts optimistic toggle and shows an error on failure", () => {
+    render(<App />);
+    connectAndLoadCatalog();
+
+    const skillCard = screen.getByRole("article", { name: "demo-skill" });
+    fireEvent.click(within(skillCard).getByRole("switch", { name: "Activa" }));
+    expect(within(skillCard).getByRole("switch", { name: "Inactiva" })).toBeInTheDocument();
+
+    act(() => {
+      window.dispatchEvent(
+        new MessageEvent("message", {
+          data: {
+            type: HOST_TO_WEBVIEW_MESSAGE_TYPES.toggleResult,
+            ok: false,
+            id: SAMPLE_SKILL.id,
+            enabled: false,
+            error: "Permission denied",
+          },
+        }),
+      );
+    });
+
+    expect(within(skillCard).getByRole("switch", { name: "Activa" })).toBeInTheDocument();
+    expect(screen.getByRole("alert")).toHaveTextContent("Permission denied");
   });
 });

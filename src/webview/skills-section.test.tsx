@@ -1,5 +1,5 @@
 import { render, screen } from "@testing-library/react";
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 import type { CatalogItem } from "../shared/index.js";
 import { SkillsSection } from "./skills-section";
 
@@ -14,14 +14,14 @@ const sampleSkill: CatalogItem = {
 
 describe("SkillsSection", () => {
   it("renders a Skills heading and skill cards", () => {
-    render(<SkillsSection skills={[sampleSkill]} />);
+    render(<SkillsSection skills={[sampleSkill]} onToggleEnabled={vi.fn()} />);
 
     expect(screen.getByRole("heading", { name: "Skills", level: 2 })).toBeInTheDocument();
     expect(screen.getByRole("article", { name: "demo-skill" })).toBeInTheDocument();
   });
 
   it("shows an empty state when there are no skills", () => {
-    render(<SkillsSection skills={[]} />);
+    render(<SkillsSection skills={[]} onToggleEnabled={vi.fn()} />);
 
     expect(screen.getByRole("heading", { name: "Skills", level: 2 })).toBeInTheDocument();
     expect(screen.getByText("No hay skills todavía")).toBeInTheDocument();
