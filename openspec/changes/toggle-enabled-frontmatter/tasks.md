@@ -16,3 +16,8 @@
 
 - [ ] 3.1 Toggle a Skill off; confirm `SKILL.md` contains `enabled: false` and card updates
 - [ ] 3.2 Toggle a Rule on/off; confirm body text unchanged aside from frontmatter
+
+## 4. Tests
+
+- [ ] 4.1 Unit tests for frontmatter `enabled` read/write preserving Markdown body; verify with `npm run test:unit`
+- [ ] 4.2 Integration test that toggles a file in a temporary workspace; verify with `npm run test:integration`

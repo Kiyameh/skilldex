@@ -14,3 +14,7 @@
 
 - [ ] 3.1 From a Skill card, Open opens that `SKILL.md` in the native editor
 - [ ] 3.2 From a Rule card, Open opens the rule file in the native editor
+
+## 4. Tests
+
+- [ ] 4.1 Integration test that Open on a temp-workspace item calls `showTextDocument` for that path; verify with `npm run test:integration`

@@ -18,3 +18,8 @@
 - [ ] 3.1 Create a Skill; confirm folder + `SKILL.md` exist and appear in Skills section enabled
 - [ ] 3.2 Create a Rule; confirm `.mdc` exists under `.cursor/rules/` and appears in Rules section
 - [ ] 3.3 Creating with an existing slug fails with a visible error and does not overwrite
+
+## 4. Tests
+
+- [ ] 4.1 Unit tests for slugify, refuse-overwrite, and template contents; verify with `npm run test:unit`
+- [ ] 4.2 Integration tests creating Rule/Skill in a temporary workspace (including existing-slug failure); verify with `npm run test:integration`

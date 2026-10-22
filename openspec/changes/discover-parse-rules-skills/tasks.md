@@ -23,3 +23,8 @@
 
 - [ ] 4.1 Place sample Rule and Skill under `.cursor/` and confirm both appear in the Host response
 - [ ] 4.2 Confirm `enabled: false` items parse as disabled
+
+## 5. Tests
+
+- [ ] 5.1 Unit tests for discovery/parse mapping (`enabled`, globs, skip `.vscode/rules/`) with in-memory or `mkdtemp` fixtures; verify with `npm run test:unit`
+- [ ] 5.2 One integration test over a temporary workspace catalog; verify with `npm run test:integration`

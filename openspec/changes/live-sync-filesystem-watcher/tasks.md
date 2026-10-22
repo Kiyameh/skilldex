@@ -17,3 +17,7 @@
 - [ ] 3.1 Edit a Skill description in native editor, save; dashboard updates without manual reload
 - [ ] 3.2 Delete a Rule on disk; card disappears after refresh
 - [ ] 3.3 Deactivate extension / dispose and confirm watchers are disposed (no lingering listeners in logs)
+
+## 4. Tests
+
+- [ ] 4.1 Integration test: mutate a file in a temporary workspace and observe a catalog refresh after debounce; verify with `npm run test:integration`

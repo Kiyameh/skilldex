@@ -16,3 +16,7 @@
 
 - [ ] 3.1 Open dashboard with sample Skills and Rules; confirm two sections and card fields
 - [ ] 3.2 Confirm empty workspace shows empty states without crashing
+
+## 4. Tests
+
+- [ ] 4.1 RTL tests for Skills/Rules sections, cards, and empty states (accessible queries); verify with `npm run test:unit`
