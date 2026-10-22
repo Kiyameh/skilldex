@@ -18,9 +18,9 @@ Existe (o existirá) shell Host+Webview. Los slices de catálogo y mutación nec
 ## Decisions
 
 - **Ubicación tipos:** carpeta `src/shared/` (o `packages/shared`) con mensajes y modelos de catálogo mínimos.
-- **Transporte:** `webview.postMessage` / `panel.webview.onDidReceiveMessage`; adapters finos que validen discriminant (type guards), sin `any`.
+- **Transporte:** `webviewView.webview.postMessage` / `webviewView.webview.onDidReceiveMessage` (Activity Bar `WebviewView`, no panel de editor); adapters finos que validen discriminant (type guards), sin `any`.
 - **Forma de ítem (mínima):** `{ id, kind: 'rule' | 'skill', path, enabled, title?, description?, globs?: string[] }` — campos display se rellenan en discovery.
-- **Handshake:** `host/ready` + `webview/ready` o `ping`/`pong` documentado en el módulo.
+- **Handshake:** `host/ready` (Host → Webview) + `webview/ready` (Webview → Host), con reintento corto en el Host porque `postMessage` puede llegar antes de que el script del Webview esté vivo.
 
 ## Risks / Trade-offs
 
