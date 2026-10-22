@@ -32,12 +32,13 @@ context: |
   - Open item in native editor (showTextDocument) — separate change
   - Create new Rule (`.mdc` template) and new Skill (`SKILL.md` folder template) — one change, separate from open
   - Live sync via FileSystemWatcher
+  - Testing pyramid (local): Vitest unit + Webview RTL, @vscode/test-cli integration; colocated `*.test.ts(x)` / `*.integration.test.ts`; fixtures in-memory or temp workspace (never the repo `.cursor/` tree). Each subsequent change's tasks.md includes tests. Backfill covers shipped specs.
 
   MVP out-of-scope:
   - WYSIWYG / rich Markdown editor inside Webview
   - Multi-format parsers (Copilot, Windsurf, Claude Code, etc.)
   - Token metrics, analytics, LLM APIs
-  - Complex automated testing or Marketplace publish automation
+  - Marketplace publish automation or remote CI (GitHub Actions)
   - `.vscode/rules/` (deferred; MVP is `.cursor/` only)
 
   Conventions:
