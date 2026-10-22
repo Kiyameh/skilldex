@@ -4,15 +4,38 @@ Panel visual (extensión de VS Code) para Rules y Skills de IA locales bajo `.cu
 
 **Identidad:** `publisher` `andoni` · `name` `skilldex` · `displayName` `SkillDex`
 
-## Tooling de desarrollo
+## Arrancar la extensión
 
 ```bash
 npm install
-npm run typecheck   # TypeScript strict (sin emitir)
-npm run lint        # ESLint
-npm run lint:fix   # ESLint con autofix
-npm run format      # Prettier (escribir)
+npm run build
+```
+
+1. Abre este repositorio en VS Code / Cursor.
+2. Pulsa **F5** (o _Run and Debug_ → **Run SkillDex Extension**) para lanzar el Extension Development Host.
+3. En la ventana nueva:
+   - Usa el icono **SkillDex** de la Activity Bar, o
+   - Ejecuta el comando de paleta **SkillDex: Abrir SkillDex**.
+
+Deberías ver el shell branded con el título **SkillDex**.
+
+## Scripts de desarrollo
+
+```bash
+npm run build          # Host (tsc) + Webview (Vite)
+npm run watch          # Watch Host + Webview
+npm run compile        # Solo Extension Host
+npm run build:webview  # Solo Webview
+npm run typecheck      # TypeScript strict (Host + Webview)
+npm run lint
+npm run lint:fix
+npm run format
 npm run format:check
 ```
 
-Los scripts de build / watch del Extension Host y del Webview se añadirán cuando se aplique el scaffold de la extensión.
+## Estructura
+
+- `src/extension/` — Extension Host (TypeScript strict)
+- `src/webview/` — UI React + Vite + Tailwind
+- `out/extension/` — salida compilada del Host
+- `dist/webview/` — assets estáticos del Webview
