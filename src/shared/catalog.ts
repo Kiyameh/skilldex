@@ -10,6 +10,9 @@ export interface CatalogItem {
   title?: string;
   description?: string;
   globs?: string[];
+  sections?: string[];
+  version?: string;
+  category?: string;
 }
 
 export interface CatalogPayload {

@@ -137,10 +137,25 @@ describe("isCatalogItem", () => {
     expect(isCatalogItem(SAMPLE_CATALOG_ITEM)).toBe(true);
   });
 
+  it("accepts optional presentation fields when well-typed", () => {
+    expect(
+      isCatalogItem({
+        ...SAMPLE_CATALOG_ITEM,
+        sections: ["Alpha", "Beta"],
+        version: "1.0.0",
+        category: "stack",
+      }),
+    ).toBe(true);
+    expect(isCatalogItem({ ...SAMPLE_CATALOG_ITEM, sections: [] })).toBe(true);
+  });
+
   it("rejects malformed catalog items", () => {
     expect(isCatalogItem(null)).toBe(false);
     expect(isCatalogItem({ ...SAMPLE_CATALOG_ITEM, kind: "other" })).toBe(false);
     expect(isCatalogItem({ ...SAMPLE_CATALOG_ITEM, enabled: "yes" })).toBe(false);
     expect(isCatalogItem({ ...SAMPLE_CATALOG_ITEM, globs: [1] })).toBe(false);
+    expect(isCatalogItem({ ...SAMPLE_CATALOG_ITEM, sections: [1] })).toBe(false);
+    expect(isCatalogItem({ ...SAMPLE_CATALOG_ITEM, version: 1 })).toBe(false);
+    expect(isCatalogItem({ ...SAMPLE_CATALOG_ITEM, category: null })).toBe(false);
   });
 });

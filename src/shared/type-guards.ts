@@ -32,6 +32,9 @@ export function isCatalogItem(value: unknown): value is CatalogItem {
   if (value["title"] !== undefined && typeof value["title"] !== "string") return false;
   if (value["description"] !== undefined && typeof value["description"] !== "string") return false;
   if (value["globs"] !== undefined && !isStringArray(value["globs"])) return false;
+  if (value["sections"] !== undefined && !isStringArray(value["sections"])) return false;
+  if (value["version"] !== undefined && typeof value["version"] !== "string") return false;
+  if (value["category"] !== undefined && typeof value["category"] !== "string") return false;
   return true;
 }
 
