@@ -5,10 +5,12 @@ import {
   isWebviewToHostMessage,
   type CatalogPayload,
   type HostToWebviewMessage,
+  type WebviewOpenItemMessage,
   type WebviewToHostMessage,
   type WebviewToggleEnabledMessage,
 } from "../shared/index.js";
 import { discoverCatalog } from "./discover-catalog.js";
+import { openCatalogItem } from "./open-catalog-item.js";
 import { setItemEnabled } from "./set-item-enabled.js";
 
 const HANDSHAKE_RETRY_ATTEMPTS = 20;
@@ -84,6 +86,40 @@ async function replyToToggleEnabled(
   });
 }
 
+async function replyToOpenItem(
+  webview: Webview,
+  getWorkspaceRoot: () => string | undefined,
+  message: WebviewOpenItemMessage,
+): Promise<void> {
+  const workspaceRoot = getWorkspaceRoot();
+  if (workspaceRoot === undefined) {
+    postHostMessage(webview, {
+      type: HOST_TO_WEBVIEW_MESSAGE_TYPES.openResult,
+      ok: false,
+      id: message.id,
+      error: MISSING_WORKSPACE_ERROR,
+    });
+    return;
+  }
+
+  const result = await openCatalogItem(workspaceRoot, message.id);
+  if (result.ok) {
+    postHostMessage(webview, {
+      type: HOST_TO_WEBVIEW_MESSAGE_TYPES.openResult,
+      ok: true,
+      id: result.id,
+    });
+    return;
+  }
+
+  postHostMessage(webview, {
+    type: HOST_TO_WEBVIEW_MESSAGE_TYPES.openResult,
+    ok: false,
+    id: result.id,
+    error: result.error,
+  });
+}
+
 export function startHostMessageHandling(
   webview: Webview,
   options: HostMessageAdapterOptions,
@@ -112,8 +148,13 @@ export function startHostMessageHandling(
       return;
     }
 
-    if (message.type === WEBVIEW_TO_HOST_MESSAGE_TYPES.toggleEnabled)
+    if (message.type === WEBVIEW_TO_HOST_MESSAGE_TYPES.toggleEnabled) {
       void replyToToggleEnabled(webview, options.getWorkspaceRoot, message);
+      return;
+    }
+
+    if (message.type === WEBVIEW_TO_HOST_MESSAGE_TYPES.openItem)
+      void replyToOpenItem(webview, options.getWorkspaceRoot, message);
   });
 
   sendHostReady();

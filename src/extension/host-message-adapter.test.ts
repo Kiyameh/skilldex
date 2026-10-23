@@ -2,13 +2,19 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 import type { Disposable, Webview } from "vscode";
 import { HOST_TO_WEBVIEW_MESSAGE_TYPES, WEBVIEW_TO_HOST_MESSAGE_TYPES } from "../shared/index.js";
 import { startHostMessageHandling } from "./host-message-adapter.js";
+import { openCatalogItem } from "./open-catalog-item.js";
 import { setItemEnabled } from "./set-item-enabled.js";
 
 vi.mock("./set-item-enabled.js", () => ({
   setItemEnabled: vi.fn(),
 }));
 
+vi.mock("./open-catalog-item.js", () => ({
+  openCatalogItem: vi.fn(),
+}));
+
 const mockedSetItemEnabled = vi.mocked(setItemEnabled);
+const mockedOpenCatalogItem = vi.mocked(openCatalogItem);
 
 interface FakeWebview {
   webview: Webview;
@@ -55,6 +61,7 @@ describe("startHostMessageHandling", () => {
   afterEach(() => {
     vi.useRealTimers();
     mockedSetItemEnabled.mockReset();
+    mockedOpenCatalogItem.mockReset();
   });
 
   it("posts host ready immediately and completes after webview ready", () => {
@@ -211,6 +218,82 @@ describe("startHostMessageHandling", () => {
         id: SAMPLE_ITEM.id,
         enabled: true,
         error: "EACCES",
+      });
+    });
+
+    handling.dispose();
+  });
+
+  it("replies with open failure when workspace root is missing", async () => {
+    const { webview, posted, emit } = createFakeWebview();
+    const handling = startHostMessageHandling(webview, {
+      getWorkspaceRoot: () => undefined,
+    });
+
+    emit({
+      type: WEBVIEW_TO_HOST_MESSAGE_TYPES.openItem,
+      id: SAMPLE_ITEM.id,
+    });
+
+    await vi.waitFor(() => {
+      expect(posted).toContainEqual({
+        type: HOST_TO_WEBVIEW_MESSAGE_TYPES.openResult,
+        ok: false,
+        id: SAMPLE_ITEM.id,
+        error: "No workspace folder is open",
+      });
+    });
+    expect(mockedOpenCatalogItem).not.toHaveBeenCalled();
+
+    handling.dispose();
+  });
+
+  it("replies with open success when openCatalogItem succeeds", async () => {
+    mockedOpenCatalogItem.mockResolvedValue({ ok: true, id: SAMPLE_ITEM.id });
+    const { webview, posted, emit } = createFakeWebview();
+    const handling = startHostMessageHandling(webview, {
+      getWorkspaceRoot: () => "/tmp/workspace",
+    });
+
+    emit({
+      type: WEBVIEW_TO_HOST_MESSAGE_TYPES.openItem,
+      id: SAMPLE_ITEM.id,
+    });
+
+    await vi.waitFor(() => {
+      expect(posted).toContainEqual({
+        type: HOST_TO_WEBVIEW_MESSAGE_TYPES.openResult,
+        ok: true,
+        id: SAMPLE_ITEM.id,
+      });
+    });
+    expect(mockedOpenCatalogItem).toHaveBeenCalledWith("/tmp/workspace", SAMPLE_ITEM.id);
+
+    handling.dispose();
+  });
+
+  it("replies with open failure when openCatalogItem fails", async () => {
+    mockedOpenCatalogItem.mockResolvedValue({
+      ok: false,
+      id: SAMPLE_ITEM.id,
+      error: "ENOENT",
+    });
+    const { webview, posted, emit } = createFakeWebview();
+    const handling = startHostMessageHandling(webview, {
+      getWorkspaceRoot: () => "/tmp/workspace",
+    });
+
+    emit({
+      type: WEBVIEW_TO_HOST_MESSAGE_TYPES.openItem,
+      id: SAMPLE_ITEM.id,
+    });
+
+    await vi.waitFor(() => {
+      expect(posted).toContainEqual({
+        type: HOST_TO_WEBVIEW_MESSAGE_TYPES.openResult,
+        ok: false,
+        id: SAMPLE_ITEM.id,
+        error: "ENOENT",
       });
     });
 
