@@ -23,6 +23,10 @@ function isStringArray(value: unknown): value is string[] {
   return Array.isArray(value) && value.every((entry) => typeof entry === "string");
 }
 
+function isNonNegativeInteger(value: unknown): value is number {
+  return typeof value === "number" && Number.isInteger(value) && value >= 0;
+}
+
 export function isCatalogItem(value: unknown): value is CatalogItem {
   if (!isRecord(value)) return false;
   if (typeof value["id"] !== "string") return false;
@@ -35,6 +39,8 @@ export function isCatalogItem(value: unknown): value is CatalogItem {
   if (value["sections"] !== undefined && !isStringArray(value["sections"])) return false;
   if (value["version"] !== undefined && typeof value["version"] !== "string") return false;
   if (value["category"] !== undefined && typeof value["category"] !== "string") return false;
+  if (value["characterCount"] !== undefined && !isNonNegativeInteger(value["characterCount"]))
+    return false;
   return true;
 }
 

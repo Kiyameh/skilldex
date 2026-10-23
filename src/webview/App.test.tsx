@@ -11,6 +11,7 @@ const SAMPLE_SKILL = {
   enabled: true,
   title: "demo-skill",
   description: "Demo",
+  characterCount: 1024,
 };
 
 const SAMPLE_RULE = {

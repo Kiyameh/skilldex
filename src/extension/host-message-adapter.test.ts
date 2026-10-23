@@ -55,6 +55,7 @@ const SAMPLE_ITEM = {
   path: "/tmp/.cursor/skills/demo/SKILL.md",
   enabled: false,
   title: "demo-skill",
+  characterCount: 1024,
 };
 
 describe("startHostMessageHandling", () => {

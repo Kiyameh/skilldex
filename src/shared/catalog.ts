@@ -13,6 +13,7 @@ export interface CatalogItem {
   sections?: string[];
   version?: string;
   category?: string;
+  characterCount?: number;
 }
 
 export interface CatalogPayload {

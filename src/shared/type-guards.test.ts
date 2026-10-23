@@ -149,6 +149,12 @@ describe("isCatalogItem", () => {
     expect(isCatalogItem({ ...SAMPLE_CATALOG_ITEM, sections: [] })).toBe(true);
   });
 
+  it("accepts characterCount when omitted or a non-negative integer", () => {
+    expect(isCatalogItem(SAMPLE_CATALOG_ITEM)).toBe(true);
+    expect(isCatalogItem({ ...SAMPLE_CATALOG_ITEM, characterCount: 0 })).toBe(true);
+    expect(isCatalogItem({ ...SAMPLE_CATALOG_ITEM, characterCount: 1024 })).toBe(true);
+  });
+
   it("rejects malformed catalog items", () => {
     expect(isCatalogItem(null)).toBe(false);
     expect(isCatalogItem({ ...SAMPLE_CATALOG_ITEM, kind: "other" })).toBe(false);
@@ -157,5 +163,9 @@ describe("isCatalogItem", () => {
     expect(isCatalogItem({ ...SAMPLE_CATALOG_ITEM, sections: [1] })).toBe(false);
     expect(isCatalogItem({ ...SAMPLE_CATALOG_ITEM, version: 1 })).toBe(false);
     expect(isCatalogItem({ ...SAMPLE_CATALOG_ITEM, category: null })).toBe(false);
+    expect(isCatalogItem({ ...SAMPLE_CATALOG_ITEM, characterCount: -1 })).toBe(false);
+    expect(isCatalogItem({ ...SAMPLE_CATALOG_ITEM, characterCount: 1.5 })).toBe(false);
+    expect(isCatalogItem({ ...SAMPLE_CATALOG_ITEM, characterCount: Infinity })).toBe(false);
+    expect(isCatalogItem({ ...SAMPLE_CATALOG_ITEM, characterCount: "1024" })).toBe(false);
   });
 });

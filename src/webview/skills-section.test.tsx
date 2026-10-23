@@ -11,6 +11,7 @@ function buildSkill(overrides: Partial<CatalogItem> = {}): CatalogItem {
     enabled: true,
     title: "demo-skill",
     description: "Demo",
+    characterCount: 1024,
     ...overrides,
   };
 }
