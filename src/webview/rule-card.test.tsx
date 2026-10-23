@@ -31,6 +31,12 @@ describe("RuleCard", () => {
     expect(screen.getByRole("button", { name: "Editar" })).toBeInTheDocument();
   });
 
+  it("does not show a character or token size line", () => {
+    render(<RuleCard item={buildRule()} onToggleEnabled={vi.fn()} onOpenItem={vi.fn()} />);
+
+    expect(screen.queryByText(/caracteres/)).not.toBeInTheDocument();
+  });
+
   it("shows empty sections and globs copy when both are empty", () => {
     render(
       <RuleCard

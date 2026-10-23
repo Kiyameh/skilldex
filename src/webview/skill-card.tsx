@@ -1,6 +1,7 @@
 import type { CatalogItem } from "../shared/index.js";
 import { EditButton } from "./edit-button";
 import { EnabledToggle } from "./enabled-toggle";
+import { formatSkillInvocationSize } from "./format-skill-invocation-size";
 
 interface SkillCardProps {
   item: CatalogItem;
@@ -20,6 +21,7 @@ export function SkillCard({
   const name = item.title ?? item.id;
   const description = item.description ?? MISSING_DESCRIPTION;
   const version = item.version;
+  const sizeLine = formatSkillInvocationSize(item.characterCount ?? 0);
 
   return (
     <article
@@ -39,9 +41,12 @@ export function SkillCard({
           onToggle={(nextEnabled) => onToggleEnabled(item, nextEnabled)}
         />
       </header>
-      <div className="max-h-0 overflow-hidden transition-[max-height] duration-300 ease-out group-hover:max-h-28 group-focus-within:max-h-28">
+      <div className="max-h-0 overflow-hidden transition-[max-height] duration-300 ease-out group-hover:max-h-40 group-focus-within:max-h-40">
         <div className="flex items-start justify-between gap-3 pt-3">
-          <p className="m-0 min-w-0 flex-1 text-xs opacity-80">{description}</p>
+          <div className="min-w-0 flex-1">
+            <p className="m-0 text-xs opacity-80">{description}</p>
+            <p className="m-0 mt-1 text-xs text-blue-500">{sizeLine}</p>
+          </div>
           <EditButton onClick={() => onOpenItem(item)} />
         </div>
       </div>

@@ -11,6 +11,7 @@ function buildSkill(overrides: Partial<CatalogItem> = {}): CatalogItem {
     enabled: true,
     title: "demo-skill",
     description: "Demo description",
+    characterCount: 1024,
     ...overrides,
   };
 }
@@ -24,6 +25,44 @@ describe("SkillCard", () => {
     expect(screen.getByRole("switch", { name: "Activa" })).toHaveAttribute("aria-checked", "true");
     expect(screen.getByText("Demo description")).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Editar" })).toBeInTheDocument();
+  });
+
+  it("shows invocation size under description inside the hover reveal", () => {
+    const { container } = render(
+      <SkillCard
+        item={buildSkill({ characterCount: 1024 })}
+        onToggleEnabled={vi.fn()}
+        onOpenItem={vi.fn()}
+      />,
+    );
+
+    const sizeLine = screen.getByText("1.024 caracteres (~366 tokens)");
+    expect(sizeLine).toHaveClass("text-blue-500");
+    const reveal = container.querySelector(".group-hover\\:max-h-40");
+    expect(reveal).not.toBeNull();
+    expect(reveal).toContainElement(sizeLine);
+    const header = screen.getByRole("article").querySelector("header");
+    expect(header).not.toContainElement(sizeLine);
+  });
+
+  it("shows zero size when characterCount is 0", () => {
+    render(
+      <SkillCard
+        item={buildSkill({ characterCount: 0 })}
+        onToggleEnabled={vi.fn()}
+        onOpenItem={vi.fn()}
+      />,
+    );
+
+    expect(screen.getByText("0 caracteres (~0 tokens)")).toBeInTheDocument();
+  });
+
+  it("treats omitted characterCount as zero in the size line", () => {
+    const { characterCount, ...skillWithoutCount } = buildSkill();
+    void characterCount;
+    render(<SkillCard item={skillWithoutCount} onToggleEnabled={vi.fn()} onOpenItem={vi.fn()} />);
+
+    expect(screen.getByText("0 caracteres (~0 tokens)")).toBeInTheDocument();
   });
 
   it("shows muted version to the right of the name when present", () => {
