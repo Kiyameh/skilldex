@@ -90,6 +90,15 @@ describe("discoverCatalog", () => {
       sections: [],
     });
 
+    const skillContents = [
+      "---",
+      "name: demo-skill",
+      "description: Nested skill",
+      "metadata:",
+      '  version: "1.0.0"',
+      "---",
+      "body",
+    ].join("\n");
     expect(catalog.skills[0]).toMatchObject({
       id: ".cursor/skills/nested/demo-skill/SKILL.md",
       kind: "skill",
@@ -98,7 +107,24 @@ describe("discoverCatalog", () => {
       description: "Nested skill",
       version: "1.0.0",
       category: "nested",
+      characterCount: Array.from(skillContents).length,
     });
+    expect(catalog.rules[0]?.characterCount).toBeUndefined();
+  });
+
+  it("counts only SKILL.md and ignores auxiliary files in the skill folder", async () => {
+    const root = await createTempWorkspace();
+    const skillDir = path.join(root, ".cursor", "skills", "with-aux");
+    await mkdir(skillDir, { recursive: true });
+
+    const skillContents = ["---", "name: with-aux", "---", "primary body"].join("\n");
+    await writeFile(path.join(skillDir, "SKILL.md"), skillContents);
+    await writeFile(path.join(skillDir, "notes.md"), "this must not affect characterCount");
+
+    const catalog = await discoverCatalog(root);
+
+    expect(catalog.skills).toHaveLength(1);
+    expect(catalog.skills[0]?.characterCount).toBe(Array.from(skillContents).length);
   });
 
   it("maps native disable keys and ignores vscode rules and legacy enabled", async () => {

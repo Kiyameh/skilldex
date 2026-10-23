@@ -101,6 +101,40 @@ describe("mapFrontmatterToCatalogItem", () => {
     });
   });
 
+  describe("skill characterCount", () => {
+    it("counts Unicode code points of the full SKILL.md contents", () => {
+      const contents = ["---", "name: demo", "---", "body with 😀"].join("\n");
+      const item = mapFrontmatterToCatalogItem(
+        path.join(WORKSPACE, ".cursor", "skills", "demo", "SKILL.md"),
+        ".cursor/skills/demo/SKILL.md",
+        "skill",
+        contents,
+      );
+      expect(item.characterCount).toBe(Array.from(contents).length);
+    });
+
+    it("returns 0 for an empty skill file", () => {
+      const item = mapFrontmatterToCatalogItem(
+        path.join(WORKSPACE, ".cursor", "skills", "empty", "SKILL.md"),
+        ".cursor/skills/empty/SKILL.md",
+        "skill",
+        "",
+      );
+      expect(item.characterCount).toBe(0);
+    });
+
+    it("omits characterCount on rules", () => {
+      const contents = ["---", "title: Sample", "---", "body"].join("\n");
+      const item = mapFrontmatterToCatalogItem(
+        path.join(WORKSPACE, ".cursor", "rules", "sample.mdc"),
+        ".cursor/rules/sample.mdc",
+        "rule",
+        contents,
+      );
+      expect(item.characterCount).toBeUndefined();
+    });
+  });
+
   describe("native enabled mapping", () => {
     it("maps rule enabled only when alwaysApply is boolean true", () => {
       const active = mapFrontmatterToCatalogItem(

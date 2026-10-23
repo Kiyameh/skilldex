@@ -1,6 +1,7 @@
 import matter from "gray-matter";
 import path from "node:path";
 import type { CatalogItem, CatalogItemKind } from "../shared/index.js";
+import { countUnicodeCodePoints } from "./count-unicode-code-points.js";
 import { extractRuleSections } from "./extract-rule-sections.js";
 
 export const ALWAYS_APPLY_KEY = "alwaysApply";
@@ -78,6 +79,7 @@ export function mapFrontmatterToCatalogItem(
       path: absolutePath,
       enabled: mapSkillEnabled(frontmatter),
       title,
+      characterCount: countUnicodeCodePoints(fileContents),
       ...(description !== undefined ? { description } : {}),
       ...(version !== undefined ? { version } : {}),
       ...(category !== undefined ? { category } : {}),

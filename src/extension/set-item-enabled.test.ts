@@ -41,6 +41,24 @@ describe("setItemEnabled", () => {
     expect(written).toContain("disable-model-invocation: true");
     expect(written).not.toContain("enabled:");
     expect(written).toContain(BODY_MARKER);
+    expect(result.item.characterCount).toBe(Array.from(written).length);
+  });
+
+  it("omits characterCount when toggling a rule", async () => {
+    const root = await createWorkspace();
+    const rulesDir = path.join(root, ".cursor", "rules");
+    await mkdir(rulesDir, { recursive: true });
+    const rulePath = path.join(rulesDir, "sample.mdc");
+    await writeFile(
+      rulePath,
+      ["---", "title: Sample", "alwaysApply: false", "---", BODY_MARKER, ""].join("\n"),
+    );
+
+    const result = await setItemEnabled(root, ".cursor/rules/sample.mdc", true);
+
+    expect(result.ok).toBe(true);
+    if (!result.ok) return;
+    expect(result.item.characterCount).toBeUndefined();
   });
 
   it("writes alwaysApply true on a rule on and preserves the body", async () => {
