@@ -2,29 +2,43 @@
 
 ## Purpose
 
-Permitir activar/desactivar Rules y Skills en un clic persistiendo `enabled` en el frontmatter del fichero.
+Permitir activar/desactivar Rules y Skills en un clic persistiendo las claves nativas de Cursor (`alwaysApply` / `disable-model-invocation`) en el frontmatter del fichero.
 
 ## Requirements
 
 ### Requirement: Toggle control on Skill and Rule cards
-Each Skill and Rule card SHALL expose a one-click control to toggle enabled state.
+Each Skill and Rule card SHALL expose a one-click control to toggle enabled state. Persistence SHALL use Cursor-native frontmatter keys: Rules write `alwaysApply`; Skills write `disable-model-invocation` (inverted). The Host MUST write the boolean explicitly on both activate and deactivate. Frontmatter `enabled` MUST NOT be written or removed by the toggle.
 
 #### Scenario: User toggles a skill off
 - **WHEN** the user activates the toggle on an enabled Skill card
-- **THEN** the Host MUST persist `enabled: false` in that `SKILL.md` frontmatter
+- **THEN** the Host MUST persist `disable-model-invocation: true` in that `SKILL.md` frontmatter
 - **AND** the card MUST reflect the disabled state after success
 
-#### Scenario: User toggles a rule on
-- **WHEN** the user activates the toggle on a disabled Rule card (`enabled: false`)
-- **THEN** the Host MUST update the rule file frontmatter so the item is enabled with `enabled: true`
+#### Scenario: User toggles a skill on
+- **WHEN** the user activates the toggle on a disabled Skill card
+- **THEN** the Host MUST persist `disable-model-invocation: false` in that `SKILL.md` frontmatter
 - **AND** the card MUST reflect the enabled state after success
 
+#### Scenario: User toggles a rule on
+- **WHEN** the user activates the toggle on a disabled Rule card
+- **THEN** the Host MUST persist `alwaysApply: true` in that rule file frontmatter
+- **AND** the card MUST reflect the enabled state after success
+
+#### Scenario: User toggles a rule off
+- **WHEN** the user activates the toggle on an enabled Rule card
+- **THEN** the Host MUST persist `alwaysApply: false` in that rule file frontmatter
+- **AND** the card MUST reflect the disabled state after success
+
 ### Requirement: Persistence uses gray-matter round-trip
-The Host SHALL read-modify-write frontmatter via `gray-matter` without destroying the Markdown body.
+The Host SHALL read-modify-write frontmatter via `gray-matter` without destroying the Markdown body. Toggle MUST update only `alwaysApply` (rules) or `disable-model-invocation` (skills) and MUST leave other keys intact, including a leftover `enabled` key if present.
 
 #### Scenario: Body preserved on toggle
-- **WHEN** a toggle updates `enabled` on a file that has a Markdown body
+- **WHEN** a toggle updates the native activation key on a file that has a Markdown body
 - **THEN** the Markdown body content MUST remain intact aside from frontmatter changes
+
+#### Scenario: Leftover enabled key is not rewritten
+- **WHEN** a file still contains frontmatter `enabled` and the user toggles the item
+- **THEN** the Host MUST NOT add, remove, or change the `enabled` key as part of that write
 
 ### Requirement: Failure is visible
 If persistence fails, the UI SHALL surface an error and MUST NOT claim the new state succeeded.
