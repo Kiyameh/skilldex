@@ -35,3 +35,7 @@ export function requestCatalog(): void {
 export function requestToggleEnabled(id: string, enabled: boolean): void {
   postToHost({ type: WEBVIEW_TO_HOST_MESSAGE_TYPES.toggleEnabled, id, enabled });
 }
+
+export function requestOpenItem(id: string): void {
+  postToHost({ type: WEBVIEW_TO_HOST_MESSAGE_TYPES.openItem, id });
+}

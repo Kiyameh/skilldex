@@ -9,7 +9,9 @@ const CATALOG_WAITING_LABEL = "Catálogo: esperando…";
 
 export function App() {
   const handshakeStatus = useHostHandshake();
-  const { catalog, toggleError, pendingToggleIds, toggleItemEnabled } = useCatalog(handshakeStatus);
+  const { catalog, toggleError, openError, pendingToggleIds, toggleItemEnabled, openItem } =
+    useCatalog(handshakeStatus);
+  const actionError = toggleError ?? openError;
 
   return (
     <div className="flex h-full min-h-0 flex-col">
@@ -24,9 +26,9 @@ export function App() {
         className="flex min-h-0 flex-1 flex-col gap-3 px-4 py-3"
         aria-label="SkillDex dashboard"
       >
-        {toggleError !== undefined ? (
+        {actionError !== undefined ? (
           <p className="m-0 text-xs text-red-400" role="alert">
-            {toggleError}
+            {actionError}
           </p>
         ) : null}
         {catalog === undefined ? (
@@ -38,11 +40,13 @@ export function App() {
             <SkillsSection
               skills={catalog.skills}
               onToggleEnabled={toggleItemEnabled}
+              onOpenItem={openItem}
               pendingToggleIds={pendingToggleIds}
             />
             <RulesSection
               rules={catalog.rules}
               onToggleEnabled={toggleItemEnabled}
+              onOpenItem={openItem}
               pendingToggleIds={pendingToggleIds}
             />
           </>

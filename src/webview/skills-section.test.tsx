@@ -14,14 +14,14 @@ const sampleSkill: CatalogItem = {
 
 describe("SkillsSection", () => {
   it("renders a Skills heading and skill cards", () => {
-    render(<SkillsSection skills={[sampleSkill]} onToggleEnabled={vi.fn()} />);
+    render(<SkillsSection skills={[sampleSkill]} onToggleEnabled={vi.fn()} onOpenItem={vi.fn()} />);
 
     expect(screen.getByRole("heading", { name: "Skills", level: 2 })).toBeInTheDocument();
     expect(screen.getByRole("article", { name: "demo-skill" })).toBeInTheDocument();
   });
 
   it("shows an empty state when there are no skills", () => {
-    render(<SkillsSection skills={[]} onToggleEnabled={vi.fn()} />);
+    render(<SkillsSection skills={[]} onToggleEnabled={vi.fn()} onOpenItem={vi.fn()} />);
 
     expect(screen.getByRole("heading", { name: "Skills", level: 2 })).toBeInTheDocument();
     expect(screen.getByText("No hay skills todavía")).toBeInTheDocument();

@@ -4,12 +4,18 @@ import { SkillCard } from "./skill-card";
 interface SkillsSectionProps {
   skills: CatalogItem[];
   onToggleEnabled: (item: CatalogItem, nextEnabled: boolean) => void;
+  onOpenItem: (item: CatalogItem) => void;
   pendingToggleIds?: ReadonlySet<string>;
 }
 
 const EMPTY_SKILLS_MESSAGE = "No hay skills todavía";
 
-export function SkillsSection({ skills, onToggleEnabled, pendingToggleIds }: SkillsSectionProps) {
+export function SkillsSection({
+  skills,
+  onToggleEnabled,
+  onOpenItem,
+  pendingToggleIds,
+}: SkillsSectionProps) {
   const isEmpty = skills.length === 0;
 
   return (
@@ -27,6 +33,7 @@ export function SkillsSection({ skills, onToggleEnabled, pendingToggleIds }: Ski
                 <SkillCard
                   item={skill}
                   onToggleEnabled={onToggleEnabled}
+                  onOpenItem={onOpenItem}
                   toggleDisabled={pendingToggleIds?.has(skill.id) ?? false}
                 />
               </li>

@@ -4,12 +4,18 @@ import { RuleCard } from "./rule-card";
 interface RulesSectionProps {
   rules: CatalogItem[];
   onToggleEnabled: (item: CatalogItem, nextEnabled: boolean) => void;
+  onOpenItem: (item: CatalogItem) => void;
   pendingToggleIds?: ReadonlySet<string>;
 }
 
 const EMPTY_RULES_MESSAGE = "No hay rules todavía";
 
-export function RulesSection({ rules, onToggleEnabled, pendingToggleIds }: RulesSectionProps) {
+export function RulesSection({
+  rules,
+  onToggleEnabled,
+  onOpenItem,
+  pendingToggleIds,
+}: RulesSectionProps) {
   const isEmpty = rules.length === 0;
 
   return (
@@ -30,6 +36,7 @@ export function RulesSection({ rules, onToggleEnabled, pendingToggleIds }: Rules
                 <RuleCard
                   item={rule}
                   onToggleEnabled={onToggleEnabled}
+                  onOpenItem={onOpenItem}
                   toggleDisabled={pendingToggleIds?.has(rule.id) ?? false}
                 />
               </li>

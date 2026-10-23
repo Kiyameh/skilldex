@@ -18,13 +18,14 @@ function buildRule(overrides: Partial<CatalogItem> = {}): CatalogItem {
 
 describe("RuleCard", () => {
   it("shows title, description, globs, and enabled switch", () => {
-    render(<RuleCard item={buildRule()} onToggleEnabled={vi.fn()} />);
+    render(<RuleCard item={buildRule()} onToggleEnabled={vi.fn()} onOpenItem={vi.fn()} />);
 
     expect(screen.getByRole("article", { name: "example-rule" })).toBeInTheDocument();
     expect(screen.getByRole("heading", { name: "example-rule" })).toBeInTheDocument();
     expect(screen.getByText("Rule description")).toBeInTheDocument();
     expect(screen.getByLabelText("Globs")).toHaveTextContent("**/*.ts");
     expect(screen.getByRole("switch", { name: "Activa" })).toHaveAttribute("aria-checked", "true");
+    expect(screen.getByRole("button", { name: "Editar" })).toBeInTheDocument();
   });
 
   it("shows empty globs indication and disabled state", () => {
@@ -33,7 +34,9 @@ describe("RuleCard", () => {
       globs: [],
     });
     void description;
-    render(<RuleCard item={ruleWithoutDescription} onToggleEnabled={vi.fn()} />);
+    render(
+      <RuleCard item={ruleWithoutDescription} onToggleEnabled={vi.fn()} onOpenItem={vi.fn()} />,
+    );
 
     expect(screen.getByText("Sin descripción")).toBeInTheDocument();
     expect(screen.getByText("Sin globs")).toBeInTheDocument();
@@ -46,10 +49,20 @@ describe("RuleCard", () => {
   it("requests the target enabled state when the switch is activated", () => {
     const onToggleEnabled = vi.fn();
     const rule = buildRule({ enabled: false });
-    render(<RuleCard item={rule} onToggleEnabled={onToggleEnabled} />);
+    render(<RuleCard item={rule} onToggleEnabled={onToggleEnabled} onOpenItem={vi.fn()} />);
 
     fireEvent.click(screen.getByRole("switch", { name: "Inactiva" }));
 
     expect(onToggleEnabled).toHaveBeenCalledWith(rule, true);
+  });
+
+  it("requests open when Editar is activated", () => {
+    const onOpenItem = vi.fn();
+    const rule = buildRule();
+    render(<RuleCard item={rule} onToggleEnabled={vi.fn()} onOpenItem={onOpenItem} />);
+
+    fireEvent.click(screen.getByRole("button", { name: "Editar" }));
+
+    expect(onOpenItem).toHaveBeenCalledWith(rule);
   });
 });

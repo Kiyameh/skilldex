@@ -1,16 +1,23 @@
 import type { CatalogItem } from "../shared/index.js";
+import { EditButton } from "./edit-button";
 import { EnabledToggle } from "./enabled-toggle";
 
 interface RuleCardProps {
   item: CatalogItem;
   onToggleEnabled: (item: CatalogItem, nextEnabled: boolean) => void;
+  onOpenItem: (item: CatalogItem) => void;
   toggleDisabled?: boolean;
 }
 
 const MISSING_DESCRIPTION = "Sin descripción";
 const EMPTY_GLOBS_LABEL = "Sin globs";
 
-export function RuleCard({ item, onToggleEnabled, toggleDisabled = false }: RuleCardProps) {
+export function RuleCard({
+  item,
+  onToggleEnabled,
+  onOpenItem,
+  toggleDisabled = false,
+}: RuleCardProps) {
   const title = item.title ?? item.id;
   const description = item.description ?? MISSING_DESCRIPTION;
   const globs = item.globs ?? [];
@@ -29,7 +36,10 @@ export function RuleCard({ item, onToggleEnabled, toggleDisabled = false }: Rule
           onToggle={(nextEnabled) => onToggleEnabled(item, nextEnabled)}
         />
       </header>
-      <p className="m-0 mt-1 text-xs opacity-80">{description}</p>
+      <div className="mt-3 flex items-start justify-between gap-3">
+        <p className="m-0 min-w-0 flex-1 text-xs opacity-80">{description}</p>
+        <EditButton onClick={() => onOpenItem(item)} />
+      </div>
       {hasGlobs ? (
         <ul className="m-0 mt-2 list-none p-0 text-xs opacity-70" aria-label="Globs">
           {globs.map((glob) => (

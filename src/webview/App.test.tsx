@@ -222,4 +222,53 @@ describe("App", () => {
     expect(within(skillCard).getByRole("switch", { name: "Activa" })).toBeInTheDocument();
     expect(screen.getByRole("alert")).toHaveTextContent("Permission denied");
   });
+
+  it("posts openItem when Editar is clicked on a skill card", () => {
+    render(<App />);
+    connectAndLoadCatalog();
+
+    const skillCard = screen.getByRole("article", { name: "demo-skill" });
+    fireEvent.click(within(skillCard).getByRole("button", { name: "Editar" }));
+
+    expect(postMessage).toHaveBeenCalledWith({
+      type: WEBVIEW_TO_HOST_MESSAGE_TYPES.openItem,
+      id: SAMPLE_SKILL.id,
+    });
+  });
+
+  it("posts openItem when Editar is clicked on a rule card", () => {
+    render(<App />);
+    connectAndLoadCatalog();
+
+    const ruleCard = screen.getByRole("article", { name: "example-rule" });
+    fireEvent.click(within(ruleCard).getByRole("button", { name: "Editar" }));
+
+    expect(postMessage).toHaveBeenCalledWith({
+      type: WEBVIEW_TO_HOST_MESSAGE_TYPES.openItem,
+      id: SAMPLE_RULE.id,
+    });
+  });
+
+  it("shows an alert when openResult fails", () => {
+    render(<App />);
+    connectAndLoadCatalog();
+
+    const skillCard = screen.getByRole("article", { name: "demo-skill" });
+    fireEvent.click(within(skillCard).getByRole("button", { name: "Editar" }));
+
+    act(() => {
+      window.dispatchEvent(
+        new MessageEvent("message", {
+          data: {
+            type: HOST_TO_WEBVIEW_MESSAGE_TYPES.openResult,
+            ok: false,
+            id: SAMPLE_SKILL.id,
+            error: "File not found",
+          },
+        }),
+      );
+    });
+
+    expect(screen.getByRole("alert")).toHaveTextContent("File not found");
+  });
 });

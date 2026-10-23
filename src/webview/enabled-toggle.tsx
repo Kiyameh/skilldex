@@ -20,7 +20,7 @@ export function EnabledToggle({ enabled, onToggle, disabled = false }: EnabledTo
       aria-checked={enabled}
       aria-label={label}
       disabled={disabled}
-      className="inline-flex items-center gap-1.5 rounded text-xs opacity-90 focus-visible:outline focus-visible:outline-offset-2 focus-visible:outline-(--vscode-focusBorder,#007fd4) disabled:cursor-not-allowed disabled:opacity-50"
+      className="inline-flex shrink-0 items-center gap-1.5 rounded text-xs opacity-90 focus-visible:outline focus-visible:outline-offset-2 focus-visible:outline-(--vscode-focusBorder,#007fd4) disabled:cursor-not-allowed disabled:opacity-50"
       onClick={() => onToggle(!enabled)}
     >
       <span

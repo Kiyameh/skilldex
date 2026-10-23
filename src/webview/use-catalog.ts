@@ -6,6 +6,7 @@ import {
 } from "../shared/index.js";
 import {
   requestCatalog,
+  requestOpenItem,
   requestToggleEnabled,
   subscribeToHostMessages,
 } from "./host-message-bridge";
@@ -14,9 +15,12 @@ import type { HandshakeStatus } from "./use-host-handshake";
 export interface UseCatalogResult {
   catalog: CatalogPayload | undefined;
   toggleError: string | undefined;
+  openError: string | undefined;
   pendingToggleIds: ReadonlySet<string>;
   toggleItemEnabled: (item: CatalogItem, nextEnabled: boolean) => void;
+  openItem: (item: CatalogItem) => void;
   clearToggleError: () => void;
+  clearOpenError: () => void;
 }
 
 function patchItemEnabled(
@@ -45,6 +49,7 @@ function replaceCatalogItem(catalog: CatalogPayload, item: CatalogItem): Catalog
 export function useCatalog(handshakeStatus: HandshakeStatus): UseCatalogResult {
   const [catalog, setCatalog] = useState<CatalogPayload | undefined>(undefined);
   const [toggleError, setToggleError] = useState<string | undefined>(undefined);
+  const [openError, setOpenError] = useState<string | undefined>(undefined);
   const [pendingToggleIds, setPendingToggleIds] = useState<ReadonlySet<string>>(() => new Set());
   const latestTargetByIdRef = useRef<Map<string, boolean>>(new Map());
 
@@ -59,6 +64,15 @@ export function useCatalog(handshakeStatus: HandshakeStatus): UseCatalogResult {
           skills: message.skills,
           rules: message.rules,
         });
+        return;
+      }
+
+      if (message.type === HOST_TO_WEBVIEW_MESSAGE_TYPES.openResult) {
+        if (message.ok) {
+          setOpenError(undefined);
+          return;
+        }
+        setOpenError(message.error);
         return;
       }
 
@@ -101,6 +115,7 @@ export function useCatalog(handshakeStatus: HandshakeStatus): UseCatalogResult {
   const toggleItemEnabled = useCallback((item: CatalogItem, nextEnabled: boolean) => {
     latestTargetByIdRef.current.set(item.id, nextEnabled);
     setToggleError(undefined);
+    setOpenError(undefined);
     setPendingToggleIds((previous) => new Set(previous).add(item.id));
     setCatalog((previous) =>
       previous === undefined ? previous : patchItemEnabled(previous, item.id, nextEnabled),
@@ -108,15 +123,28 @@ export function useCatalog(handshakeStatus: HandshakeStatus): UseCatalogResult {
     requestToggleEnabled(item.id, nextEnabled);
   }, []);
 
+  const openItem = useCallback((item: CatalogItem) => {
+    setOpenError(undefined);
+    setToggleError(undefined);
+    requestOpenItem(item.id);
+  }, []);
+
   const clearToggleError = useCallback(() => {
     setToggleError(undefined);
+  }, []);
+
+  const clearOpenError = useCallback(() => {
+    setOpenError(undefined);
   }, []);
 
   return {
     catalog,
     toggleError,
+    openError,
     pendingToggleIds,
     toggleItemEnabled,
+    openItem,
     clearToggleError,
+    clearOpenError,
   };
 }
