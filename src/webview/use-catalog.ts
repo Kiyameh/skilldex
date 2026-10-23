@@ -64,6 +64,8 @@ export function useCatalog(handshakeStatus: HandshakeStatus): UseCatalogResult {
           skills: message.skills,
           rules: message.rules,
         });
+        setPendingToggleIds(new Set());
+        latestTargetByIdRef.current.clear();
         return;
       }
 

@@ -25,6 +25,14 @@ export function postHostMessage(webview: Webview, message: HostToWebviewMessage)
   webview.postMessage(message);
 }
 
+export function postCatalog(webview: Webview, catalog: CatalogPayload): void {
+  postHostMessage(webview, {
+    type: HOST_TO_WEBVIEW_MESSAGE_TYPES.catalog,
+    skills: catalog.skills,
+    rules: catalog.rules,
+  });
+}
+
 export function subscribeToWebviewMessages(
   webview: Webview,
   onMessage: (message: WebviewToHostMessage) => void,
@@ -43,11 +51,7 @@ async function replyWithCatalog(
   const catalog: CatalogPayload =
     workspaceRoot === undefined ? { skills: [], rules: [] } : await discoverCatalog(workspaceRoot);
 
-  postHostMessage(webview, {
-    type: HOST_TO_WEBVIEW_MESSAGE_TYPES.catalog,
-    skills: catalog.skills,
-    rules: catalog.rules,
-  });
+  postCatalog(webview, catalog);
 }
 
 async function replyToToggleEnabled(
