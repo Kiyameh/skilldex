@@ -27,7 +27,7 @@ describe("RuleCard", () => {
     expect(screen.getByLabelText("Secciones")).toHaveTextContent("Details");
     expect(screen.queryByText("Rule description")).not.toBeInTheDocument();
     expect(screen.getByLabelText("Globs")).toHaveTextContent("**/*.ts");
-    expect(screen.getByRole("switch", { name: "Activa" })).toHaveAttribute("aria-checked", "true");
+    expect(screen.getByRole("switch", { name: "Auto" })).toHaveAttribute("aria-checked", "true");
     expect(screen.getByRole("button", { name: "Editar" })).toBeInTheDocument();
   });
 
@@ -48,18 +48,13 @@ describe("RuleCard", () => {
 
     expect(screen.getByText("No hay secciones")).toBeInTheDocument();
     expect(screen.getByText("Sin globs")).toBeInTheDocument();
-    expect(screen.getByRole("switch", { name: "Inactiva" })).toHaveAttribute(
-      "aria-checked",
-      "false",
-    );
+    expect(screen.getByRole("switch", { name: "Manual" })).toHaveAttribute("aria-checked", "false");
   });
 
   it("treats missing sections like an empty list", () => {
     const { sections, ...ruleWithoutSections } = buildRule({ globs: [] });
     void sections;
-    render(
-      <RuleCard item={ruleWithoutSections} onToggleEnabled={vi.fn()} onOpenItem={vi.fn()} />,
-    );
+    render(<RuleCard item={ruleWithoutSections} onToggleEnabled={vi.fn()} onOpenItem={vi.fn()} />);
 
     expect(screen.getByText("No hay secciones")).toBeInTheDocument();
   });
@@ -69,7 +64,7 @@ describe("RuleCard", () => {
     const rule = buildRule({ enabled: false });
     render(<RuleCard item={rule} onToggleEnabled={onToggleEnabled} onOpenItem={vi.fn()} />);
 
-    fireEvent.click(screen.getByRole("switch", { name: "Inactiva" }));
+    fireEvent.click(screen.getByRole("switch", { name: "Manual" }));
 
     expect(onToggleEnabled).toHaveBeenCalledWith(rule, true);
   });

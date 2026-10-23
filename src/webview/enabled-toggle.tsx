@@ -6,8 +6,8 @@ interface EnabledToggleProps {
   disabled?: boolean;
 }
 
-const ENABLED_LABEL = "Activa";
-const DISABLED_LABEL = "Inactiva";
+const ENABLED_LABEL = "Auto";
+const DISABLED_LABEL = "Manual";
 
 export function EnabledToggle({ enabled, onToggle, disabled = false }: EnabledToggleProps) {
   const label = enabled ? ENABLED_LABEL : DISABLED_LABEL;

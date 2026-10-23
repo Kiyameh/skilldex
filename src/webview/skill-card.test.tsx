@@ -22,7 +22,7 @@ describe("SkillCard", () => {
 
     expect(screen.getByRole("article", { name: "demo-skill" })).toBeInTheDocument();
     expect(screen.getByRole("heading", { name: "demo-skill" })).toBeInTheDocument();
-    expect(screen.getByRole("switch", { name: "Activa" })).toHaveAttribute("aria-checked", "true");
+    expect(screen.getByRole("switch", { name: "Auto" })).toHaveAttribute("aria-checked", "true");
     expect(screen.getByText("Demo description")).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Editar" })).toBeInTheDocument();
   });
@@ -94,10 +94,7 @@ describe("SkillCard", () => {
     );
 
     expect(screen.getByText("Sin descripción")).toBeInTheDocument();
-    expect(screen.getByRole("switch", { name: "Inactiva" })).toHaveAttribute(
-      "aria-checked",
-      "false",
-    );
+    expect(screen.getByRole("switch", { name: "Manual" })).toHaveAttribute("aria-checked", "false");
   });
 
   it("falls back to id when title is missing", () => {
@@ -115,7 +112,7 @@ describe("SkillCard", () => {
     const skill = buildSkill({ enabled: true });
     render(<SkillCard item={skill} onToggleEnabled={onToggleEnabled} onOpenItem={vi.fn()} />);
 
-    fireEvent.click(screen.getByRole("switch", { name: "Activa" }));
+    fireEvent.click(screen.getByRole("switch", { name: "Auto" }));
 
     expect(onToggleEnabled).toHaveBeenCalledWith(skill, false);
   });

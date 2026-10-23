@@ -173,14 +173,14 @@ describe("App", () => {
     connectAndLoadCatalog();
 
     const skillCard = screen.getByRole("article", { name: "demo-skill" });
-    fireEvent.click(within(skillCard).getByRole("switch", { name: "Activa" }));
+    fireEvent.click(within(skillCard).getByRole("switch", { name: "Auto" }));
 
     expect(postMessage).toHaveBeenCalledWith({
       type: WEBVIEW_TO_HOST_MESSAGE_TYPES.toggleEnabled,
       id: SAMPLE_SKILL.id,
       enabled: false,
     });
-    expect(within(skillCard).getByRole("switch", { name: "Inactiva" })).toBeInTheDocument();
+    expect(within(skillCard).getByRole("switch", { name: "Manual" })).toBeInTheDocument();
 
     act(() => {
       window.dispatchEvent(
@@ -194,7 +194,7 @@ describe("App", () => {
       );
     });
 
-    expect(within(skillCard).getByRole("switch", { name: "Inactiva" })).toBeInTheDocument();
+    expect(within(skillCard).getByRole("switch", { name: "Manual" })).toBeInTheDocument();
     expect(screen.queryByRole("alert")).not.toBeInTheDocument();
   });
 
@@ -203,8 +203,8 @@ describe("App", () => {
     connectAndLoadCatalog();
 
     const skillCard = screen.getByRole("article", { name: "demo-skill" });
-    fireEvent.click(within(skillCard).getByRole("switch", { name: "Activa" }));
-    expect(within(skillCard).getByRole("switch", { name: "Inactiva" })).toBeInTheDocument();
+    fireEvent.click(within(skillCard).getByRole("switch", { name: "Auto" }));
+    expect(within(skillCard).getByRole("switch", { name: "Manual" })).toBeInTheDocument();
 
     act(() => {
       window.dispatchEvent(
@@ -220,7 +220,7 @@ describe("App", () => {
       );
     });
 
-    expect(within(skillCard).getByRole("switch", { name: "Activa" })).toBeInTheDocument();
+    expect(within(skillCard).getByRole("switch", { name: "Auto" })).toBeInTheDocument();
     expect(screen.getByRole("alert")).toHaveTextContent("Permission denied");
   });
 
