@@ -1,8 +1,8 @@
 # SkillDex
 
-<div align="center">
+
 ![image](./media/screenshot.png)
-</div>
+
 
 La extensión para Cursor para manejar **Rules** y **Skills** de IA.
 
@@ -15,17 +15,17 @@ Descubre todo el catálogo de herramientas IA y lo muestra en un práctico dashb
 
 ## Instalación (VSIX)
 
-1. Genera el paquete (o [descárgate el generado](https://github.com/Kiyameh/skilldex/raw/main/download/skilldex-1.0.0.vsix)):
+1. Genera el paquete (o [descargate el paquete ya generado](https://github.com/Kiyameh/skilldex/tree/main/download)):
 
    ```bash
    npm install
    npm run package
    ```
 
-   Se crea `download/skilldex-1.0.0.vsix`.
+   Se crea `skilldex-1.0.0.vsix` en la carpeta `download`.
 
 2. En Cursor: paleta de comandos (F1)
-3. Escribe **Extensions: Install from VSIX…** → elige `download/skilldex-1.0.0.vsix`.
+3. Escribe `Extensions: Install from VSIX` → selecciona el archivo.
 4. Recarga la ventana si el editor lo pide.
 
 Para desinstalar: Extensions → SkillDex → Uninstall.
