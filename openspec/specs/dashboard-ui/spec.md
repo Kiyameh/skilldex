@@ -2,7 +2,7 @@
 
 ## Purpose
 
-Renderizar el dashboard con dos secciones diferenciadas (Skills primaria, Rules secundaria), cards de metadatos habituales y controles de toggle de `enabled`.
+Renderizar el dashboard con dos secciones diferenciadas (Skills primaria, Rules secundaria), cards de metadatos habituales, controles de toggle de `enabled` y acción Abrir/Editar hacia el editor nativo.
 
 ## Requirements
 
@@ -41,3 +41,10 @@ Skill and Rule cards SHALL include an accessible toggle control wired to the tog
 #### Scenario: Toggle is operable from card
 - **WHEN** a catalog card is rendered after this change
 - **THEN** it MUST provide a keyboard-accessible control that initiates the toggle request
+
+### Requirement: Open control on cards
+Each Skill and Rule card SHALL expose an Open control that sends the open message.
+
+#### Scenario: Open control present
+- **WHEN** a catalog card is rendered after this change
+- **THEN** it MUST include an accessible Open action

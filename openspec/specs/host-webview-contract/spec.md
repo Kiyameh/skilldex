@@ -42,3 +42,10 @@ The shared contract SHALL define a Webview→Host toggle request (item identity 
 #### Scenario: Toggle round-trip
 - **WHEN** the Webview sends a toggle request for a known catalog item
 - **THEN** the Host MUST respond with a typed success or failure result message
+
+### Requirement: Open document message
+The shared contract SHALL define a Webview→Host message carrying the catalog item identity or filesystem path to open.
+
+#### Scenario: Open request is typed
+- **WHEN** the Webview requests opening an item
+- **THEN** it MUST send the typed open message from the shared contract
