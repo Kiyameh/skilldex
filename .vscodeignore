@@ -1,0 +1,40 @@
+# Source and planning (runtime uses out/ + dist/)
+src/**
+openspec/**
+.cursor/**
+
+# Dev / editor / CI
+.vscode/**
+.vscode-test/**
+.git/**
+coverage/**
+**/*.vsix
+
+# Configs and tooling
+.gitignore
+.prettierignore
+.prettierrc
+.prettierrc.*
+prettier.config.*
+eslint.config.*
+.eslintrc*
+tsconfig.json
+tsconfig.*.json
+*.tsbuildinfo
+.vscode-test.mjs
+vitest.config.*
+**/.DS_Store
+
+# TypeScript sources and maps (compiled JS stays)
+**/*.ts
+**/*.tsx
+**/*.map
+
+# Compiled tests accidentally under out/
+out/**/*.test.js
+out/**/*.integration.test.js
+
+# Docs except marketplace/sideload README
+**/*.md
+!README.md
+!LICENSE

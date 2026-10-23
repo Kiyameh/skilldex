@@ -1,9 +1,13 @@
 {
   "name": "skilldex",
   "displayName": "SkillDex",
-  "description": "Panel visual para Rules y Skills de IA locales bajo .cursor/",
-  "version": "0.0.1",
+  "description": "Panel para descubrir, activar y editar Rules y Skills locales bajo .cursor/ en Cursor",
+  "version": "1.0.0",
   "publisher": "andoni",
+  "author": {
+    "name": "Andoni Gallardo"
+  },
+  "license": "MIT",
   "private": true,
   "engines": {
     "vscode": "^1.85.0",
@@ -11,6 +15,14 @@
   },
   "categories": [
     "Other"
+  ],
+  "keywords": [
+    "cursor",
+    "skills",
+    "rules",
+    "ai",
+    "dashboard",
+    "skilldex"
   ],
   "main": "./out/extension/extension.js",
   "contributes": {
@@ -48,6 +60,7 @@
     "watch:webview": "vite build --config src/webview/vite.config.ts --watch",
     "build": "npm run compile && npm run build:webview",
     "watch": "concurrently -n host,webview -c blue,magenta \"npm run watch:host\" \"npm run watch:webview\"",
+    "package": "vsce package --allow-missing-repository",
     "typecheck": "tsc --noEmit -p tsconfig.extension.json && tsc --noEmit -p tsconfig.webview.json && tsc --noEmit -p tsconfig.vitest.json && tsc --noEmit -p tsconfig.integration.json",
     "test:unit": "vitest run",
     "test:unit:watch": "vitest",
@@ -59,9 +72,7 @@
     "format:check": "prettier --check ."
   },
   "dependencies": {
-    "gray-matter": "^4.0.3",
-    "react": "^19.1.1",
-    "react-dom": "^19.1.1"
+    "gray-matter": "^4.0.3"
   },
   "devDependencies": {
     "@eslint/js": "^9.37.0",
@@ -76,6 +87,7 @@
     "@vitejs/plugin-react": "^5.0.3",
     "@vscode/test-cli": "^0.0.15",
     "@vscode/test-electron": "^3.1.0",
+    "@vscode/vsce": "^3.6.0",
     "concurrently": "^9.2.1",
     "eslint": "^9.37.0",
     "eslint-config-prettier": "^10.1.8",
@@ -85,6 +97,8 @@
     "jsdom": "^29.1.1",
     "mocha": "^12.0.3",
     "prettier": "^3.6.2",
+    "react": "^19.1.1",
+    "react-dom": "^19.1.1",
     "tailwindcss": "^4.1.13",
     "typescript": "^5.9.3",
     "typescript-eslint": "^8.46.0",

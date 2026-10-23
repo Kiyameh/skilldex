@@ -1,53 +1,118 @@
 # SkillDex
 
-Panel visual (extensión de VS Code) para Rules y Skills de IA locales bajo `.cursor/`.
+<div align="center">
+![image](./media/screenshot.png)
+</div>
 
-**Identidad:** `publisher` `andoni` · `name` `skilldex` · `displayName` `SkillDex`
+La extensión para Cursor para manejar **Rules** y **Skills** de IA.
 
-## Arrancar la extensión
+Descubre todo el catálogo de herramientas IA y lo muestra en un práctico dashboard donde puedes llevar el control de todas las herramientas. Activa y desactiva skills, conoce su peso antes usarlas y ordenalas por categorías.
+
+## Requisitos
+
+- Cursor `^1.85.0`
+- Para desarrollo y empaquetado: **Node.js >= 18**
+
+## Instalación (VSIX)
+
+1. Genera el paquete (o [Descargate el generado](URLPENDIENTE)):
+
+   ```bash
+   npm install
+   npm run package
+   ```
+
+   Se crea `skilldex-1.0.0.vsix` en la raíz del repositorio.
+
+2. En Cursor: paleta de comandos (F1)
+3. Escribe **Extensions: Install from VSIX…** → elige el `.vsix`.
+4. Recarga la ventana si el editor lo pide.
+
+Para desinstalar: Extensions → SkillDex → Uninstall.
+
+## Uso
+
+1. Abre un workspace con `.cursor/rules/` y/o `.cursor/skills/`.
+2. Abre el panel:
+   - icono **SkillDex** en la barra lateral, o
+   - comando **SkillDex: Abrir SkillDex**.
+
+## Features
+
+### Skills
+
+- Skills ordenadas por categorías ❖ Organiza tus skills en directorios dentro de `.cursor/skills/` para categorizarlas
+- Nombre y descripción
+- Versión de la skill ❖ Añade en tus skills para llevar el control de versiones:
+
+```markdown
+metadata:
+version: "1.0.0"
+```
+
+- Switch de invocación manual o automatica ❖ Maneja `disable-model-invocation: true` desde el panel
+- Peso y tokens ❖ Calculado automaticamente caracteres de la skill y gasto apróximado al usarla en un prompt
+
+### Rules
+
+- Lista de rules aplicadas en el proyecto
+- Switch de `alwaysApply: true` desde el panel
+- Secciones (titulos h2 del markdown) de cada archivo de rules
+- Globs ❖ Identifica rapidamente sobre que tipo de archivo se está aplicando cada regla
+
+## Desarrollo
 
 ```bash
 npm install
-npm run build
-```
-
-1. Abre este repositorio en VS Code / Cursor.
-2. Pulsa **F5** (o _Run and Debug_ → **Run SkillDex Extension**) para lanzar el Extension Development Host.
-3. En la ventana nueva:
-   - Usa el icono **SkillDex** de la Activity Bar, o
-   - Ejecuta el comando de paleta **SkillDex: Abrir SkillDex**.
-
-Deberías ver el shell branded con el título **SkillDex**.
-
-## Scripts de desarrollo
-
-```bash
 npm run build          # Host (tsc) + Webview (Vite)
 npm run watch          # Watch Host + Webview
-npm run compile        # Solo Extension Host
-npm run build:webview  # Solo Webview
-npm run typecheck      # TypeScript strict (Host + Webview + integration tests)
-npm run test:unit      # Vitest (shared, Host puro, Webview)
-npm run test:unit:watch
-npm run test:integration  # Extension Host (@vscode/test-cli)
-npm test               # unit && integration (gate local)
-npm run lint
-npm run lint:fix
-npm run format
-npm run format:check
 ```
 
-## Tests
+1. Abre este repositorio en Cursor / VS Code.
+2. Pulsa **F5** (_Run SkillDex Extension_) para lanzar el Extension Development Host.
+3. En la ventana nueva, usa el icono SkillDex o el comando de paleta.
 
-Pirámide local, sin GitHub Actions:
+### Scripts útiles
 
-- Colocalizados: `foo.test.ts` / `foo.test.tsx` junto al módulo (Vitest).
-- Integration: `foo.integration.test.ts` si el test importa el runtime `vscode` (Mocha en Extension Development Host). Vitest los ignora.
-- Fixtures de suite: in-memory o directorio temporal. `npm test` no usa el `.cursor/` de este repositorio.
+```bash
+npm run compile         # Solo Extension Host
+npm run build:webview   # Solo Webview
+npm run typecheck
+npm run test:unit       # Vitest
+npm run test:integration
+npm test                # unit + integration
+npm run lint
+npm run format
+npm run package         # Build + generar .vsix
+```
 
-## Estructura
+### Estructura
 
 - `src/extension/` — Extension Host (TypeScript strict)
 - `src/webview/` — UI React + Vite + Tailwind
-- `out/extension/` — salida compilada del Host
+- `src/shared/` — tipos y contrato Host ↔ Webview
+- `out/` — salida compilada del Host
 - `dist/webview/` — assets estáticos del Webview
+- `media/` — iconos (Activity Bar, UI)
+
+### Tests
+
+Pirámide local: unitarios colocalizados (`*.test.ts` / `*.test.tsx` con Vitest) e integración (`*.integration.test.ts` con `@vscode/test-cli`).
+
+## Empaquetado
+
+`npm run package` ejecuta `vscode:prepublish` (build completo) y empaqueta con `@vscode/vsce`.
+
+El fichero `.vscodeignore` es imprescindible: sin él, vsce heredaría `.gitignore` y **excluiría** `out/` y `dist/`, dejando un VSIX sin Host ni Webview (panel en blanco).
+
+Comprobar el contenido antes de instalar:
+
+```bash
+npx vsce ls
+```
+
+Debe incluir `out/extension/extension.js`, `dist/webview/index.html` (y assets), `media/*` y la dependencia runtime `gray-matter`. No debe incluir `src/` ni `openspec/`.
+
+## Licencia
+
+MIT © Andoni Gallardo
