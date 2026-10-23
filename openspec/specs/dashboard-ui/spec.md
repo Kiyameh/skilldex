@@ -48,3 +48,10 @@ Each Skill and Rule card SHALL expose an Open control that sends the open messag
 #### Scenario: Open control present
 - **WHEN** a catalog card is rendered after this change
 - **THEN** it MUST include an accessible Open action
+
+### Requirement: Re-render on catalog push
+The dashboard SHALL replace its rendered Skills and Rules lists when it receives a Host catalog update push.
+
+#### Scenario: UI reflects pushed catalog
+- **WHEN** the Webview receives a catalog update message
+- **THEN** both sections MUST re-render to match the new payload
