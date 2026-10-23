@@ -20,7 +20,7 @@ describe("setItemEnabled", () => {
     return workspaceRoot;
   }
 
-  it("writes enabled false on a skill and preserves the Markdown body", async () => {
+  it("writes disable-model-invocation true on a skill off and preserves the Markdown body", async () => {
     const root = await createWorkspace();
     const skillDir = path.join(root, ".cursor", "skills", "temp-skill");
     await mkdir(skillDir, { recursive: true });
@@ -38,11 +38,12 @@ describe("setItemEnabled", () => {
     expect(result.item.title).toBe("temp-skill");
 
     const written = await readFile(skillPath, "utf8");
-    expect(written).toContain("enabled: false");
+    expect(written).toContain("disable-model-invocation: true");
+    expect(written).not.toContain("enabled:");
     expect(written).toContain(BODY_MARKER);
   });
 
-  it("writes enabled true explicitly on a rule and preserves the body", async () => {
+  it("writes alwaysApply true on a rule on and preserves the body", async () => {
     const root = await createWorkspace();
     const rulesDir = path.join(root, ".cursor", "rules");
     await mkdir(rulesDir, { recursive: true });
@@ -53,7 +54,7 @@ describe("setItemEnabled", () => {
         "---",
         "title: Sample Rule",
         'globs: "**/*.ts"',
-        "enabled: false",
+        "alwaysApply: false",
         "---",
         BODY_MARKER,
         "",
@@ -68,9 +69,64 @@ describe("setItemEnabled", () => {
     expect(result.item.globs).toEqual(["**/*.ts"]);
 
     const written = await readFile(rulePath, "utf8");
-    expect(written).toMatch(/enabled:\s*true/);
+    expect(written).toMatch(/alwaysApply:\s*true/);
     expect(written).toContain(BODY_MARKER);
-    expect(written).not.toContain("enabled: false");
+    expect(written).not.toContain("alwaysApply: false");
+  });
+
+  it("leaves a residual enabled key unchanged when toggling", async () => {
+    const root = await createWorkspace();
+    const skillDir = path.join(root, ".cursor", "skills", "legacy");
+    await mkdir(skillDir, { recursive: true });
+    const skillPath = path.join(skillDir, "SKILL.md");
+    await writeFile(
+      skillPath,
+      [
+        "---",
+        "name: legacy",
+        "enabled: true",
+        "---",
+        BODY_MARKER,
+        "",
+      ].join("\n"),
+    );
+
+    const result = await setItemEnabled(root, ".cursor/skills/legacy/SKILL.md", false);
+
+    expect(result.ok).toBe(true);
+    if (!result.ok) return;
+
+    const written = await readFile(skillPath, "utf8");
+    expect(written).toMatch(/enabled:\s*true/);
+    expect(written).toContain("disable-model-invocation: true");
+    expect(written).toContain(BODY_MARKER);
+  });
+
+  it("writes disable-model-invocation false when enabling a skill", async () => {
+    const root = await createWorkspace();
+    const skillDir = path.join(root, ".cursor", "skills", "temp-skill");
+    await mkdir(skillDir, { recursive: true });
+    const skillPath = path.join(skillDir, "SKILL.md");
+    await writeFile(
+      skillPath,
+      [
+        "---",
+        "name: temp-skill",
+        "disable-model-invocation: true",
+        "---",
+        BODY_MARKER,
+        "",
+      ].join("\n"),
+    );
+
+    const result = await setItemEnabled(root, ".cursor/skills/temp-skill/SKILL.md", true);
+
+    expect(result.ok).toBe(true);
+    if (!result.ok) return;
+    expect(result.item.enabled).toBe(true);
+
+    const written = await readFile(skillPath, "utf8");
+    expect(written).toMatch(/disable-model-invocation:\s*false/);
   });
 
   it("rejects ids outside the catalog directories", async () => {

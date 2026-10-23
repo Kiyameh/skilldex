@@ -8,7 +8,7 @@ const SKILL_BODY = "Skill body line that must survive toggle.";
 const RULE_BODY = "Rule body line that must survive toggle.";
 
 suite("SkillDex setItemEnabled", () => {
-  test("toggles a skill and a rule in a temporary workspace preserving bodies", async () => {
+  test("toggles a skill and a rule with native keys preserving bodies", async () => {
     const workspaceRoot = await mkdtemp(path.join(os.tmpdir(), "skilldex-integration-toggle-"));
 
     try {
@@ -32,6 +32,7 @@ suite("SkillDex setItemEnabled", () => {
           "---",
           "title: Sample Rule",
           'globs: "**/*.ts"',
+          "alwaysApply: false",
           "enabled: false",
           "---",
           RULE_BODY,
@@ -49,7 +50,7 @@ suite("SkillDex setItemEnabled", () => {
       assert.equal(skillOff.item.enabled, false);
 
       const skillContents = await readFile(skillPath, "utf8");
-      assert.match(skillContents, /enabled:\s*false/);
+      assert.match(skillContents, /disable-model-invocation:\s*true/);
       assert.ok(skillContents.includes(SKILL_BODY));
 
       const ruleOn = await setItemEnabled(workspaceRoot, ".cursor/rules/sample.mdc", true);
@@ -58,7 +59,8 @@ suite("SkillDex setItemEnabled", () => {
       assert.equal(ruleOn.item.enabled, true);
 
       const ruleContents = await readFile(rulePath, "utf8");
-      assert.match(ruleContents, /enabled:\s*true/);
+      assert.match(ruleContents, /alwaysApply:\s*true/);
+      assert.match(ruleContents, /enabled:\s*false/);
       assert.ok(ruleContents.includes(RULE_BODY));
 
       const ruleOff = await setItemEnabled(workspaceRoot, ".cursor/rules/sample.mdc", false);
@@ -67,6 +69,7 @@ suite("SkillDex setItemEnabled", () => {
       assert.equal(ruleOff.item.enabled, false);
 
       const ruleContentsAfterOff = await readFile(rulePath, "utf8");
+      assert.match(ruleContentsAfterOff, /alwaysApply:\s*false/);
       assert.match(ruleContentsAfterOff, /enabled:\s*false/);
       assert.ok(ruleContentsAfterOff.includes(RULE_BODY));
     } finally {

@@ -31,7 +31,9 @@ describe("discoverCatalog", () => {
         "title: Root Rule",
         "description: A root rule",
         'globs: "**/*.ts"',
+        "alwaysApply: true",
         "---",
+        "## Overview",
         "body",
       ].join("\n"),
     );
@@ -49,7 +51,15 @@ describe("discoverCatalog", () => {
     );
     await writeFile(
       path.join(root, ".cursor", "skills", "nested", "demo-skill", "SKILL.md"),
-      ["---", "name: demo-skill", "description: Nested skill", "---", "body"].join("\n"),
+      [
+        "---",
+        "name: demo-skill",
+        "description: Nested skill",
+        "metadata:",
+        '  version: "1.0.0"',
+        "---",
+        "body",
+      ].join("\n"),
     );
 
     const catalog = await discoverCatalog(root);
@@ -64,6 +74,7 @@ describe("discoverCatalog", () => {
       title: "Root Rule",
       description: "A root rule",
       globs: ["**/*.ts"],
+      sections: ["Overview"],
     });
     expect(rootRule?.path).toBe(path.join(root, ".cursor", "rules", "root-rule.mdc"));
 
@@ -72,10 +83,11 @@ describe("discoverCatalog", () => {
     );
     expect(nestedRule).toMatchObject({
       kind: "rule",
-      enabled: true,
+      enabled: false,
       title: "nested-rule",
       description: "Nested rule",
       globs: ["src/**", "test/**"],
+      sections: [],
     });
 
     expect(catalog.skills[0]).toMatchObject({
@@ -84,10 +96,12 @@ describe("discoverCatalog", () => {
       enabled: true,
       title: "demo-skill",
       description: "Nested skill",
+      version: "1.0.0",
+      category: "nested",
     });
   });
 
-  it("maps enabled false and ignores vscode rules", async () => {
+  it("maps native disable keys and ignores vscode rules and legacy enabled", async () => {
     const root = await createTempWorkspace();
     await mkdir(path.join(root, ".cursor", "rules"), { recursive: true });
     await mkdir(path.join(root, ".cursor", "skills", "disabled-skill"), { recursive: true });
@@ -95,11 +109,20 @@ describe("discoverCatalog", () => {
 
     await writeFile(
       path.join(root, ".cursor", "rules", "disabled.mdc"),
-      ["---", "enabled: false", "title: Disabled Rule", "---", "body"].join("\n"),
+      ["---", "alwaysApply: false", "enabled: true", "title: Disabled Rule", "---", "body"].join(
+        "\n",
+      ),
     );
     await writeFile(
       path.join(root, ".cursor", "skills", "disabled-skill", "SKILL.md"),
-      ["---", "enabled: false", "description: Disabled skill", "---", "body"].join("\n"),
+      [
+        "---",
+        "disable-model-invocation: true",
+        "enabled: true",
+        "description: Disabled skill",
+        "---",
+        "body",
+      ].join("\n"),
     );
     await writeFile(
       path.join(root, ".vscode", "rules", "ignored.mdc"),
@@ -114,6 +137,7 @@ describe("discoverCatalog", () => {
       enabled: false,
       title: "Disabled Rule",
       globs: [],
+      sections: [],
     });
     expect(catalog.skills).toHaveLength(1);
     expect(catalog.skills[0]).toMatchObject({
@@ -122,16 +146,17 @@ describe("discoverCatalog", () => {
       title: "disabled-skill",
       description: "Disabled skill",
     });
+    expect(catalog.skills[0]?.category).toBeUndefined();
   });
 
-  it("treats non-boolean enabled values as true and uses folder name when skill name is missing", async () => {
+  it("ignores non-boolean alwaysApply and uses folder name when skill name is missing", async () => {
     const root = await createTempWorkspace();
     await mkdir(path.join(root, ".cursor", "rules"), { recursive: true });
     await mkdir(path.join(root, ".cursor", "skills", "folder-named"), { recursive: true });
 
     await writeFile(
-      path.join(root, ".cursor", "rules", "string-enabled.mdc"),
-      ["---", 'enabled: "false"', "title: Still Enabled", "---", "body"].join("\n"),
+      path.join(root, ".cursor", "rules", "string-always-apply.mdc"),
+      ["---", 'alwaysApply: "true"', "title: Still Disabled", "---", "body"].join("\n"),
     );
     await writeFile(
       path.join(root, ".cursor", "skills", "folder-named", "SKILL.md"),
@@ -140,12 +165,13 @@ describe("discoverCatalog", () => {
 
     const catalog = await discoverCatalog(root);
 
-    expect(catalog.rules[0]?.enabled).toBe(true);
+    expect(catalog.rules[0]?.enabled).toBe(false);
     expect(catalog.skills[0]).toMatchObject({
       title: "folder-named",
       description: "No name field",
       enabled: true,
     });
+    expect(catalog.skills[0]?.category).toBeUndefined();
   });
 
   it("skips unreadable or broken files without failing the catalog", async () => {
@@ -159,7 +185,7 @@ describe("discoverCatalog", () => {
     );
     await writeFile(
       path.join(root, ".cursor", "rules", "good.mdc"),
-      ["---", "title: Good Rule", "---", "body"].join("\n"),
+      ["---", "title: Good Rule", "alwaysApply: true", "---", "body"].join("\n"),
     );
     await writeFile(
       path.join(root, ".cursor", "skills", "good-skill", "SKILL.md"),

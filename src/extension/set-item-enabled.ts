@@ -2,7 +2,11 @@ import { readFile, writeFile } from "node:fs/promises";
 import matter from "gray-matter";
 import type { CatalogItem } from "../shared/index.js";
 import { resolveCatalogItemPath } from "./catalog-paths.js";
-import { mapFrontmatterToCatalogItem } from "./map-frontmatter.js";
+import {
+  ALWAYS_APPLY_KEY,
+  DISABLE_MODEL_INVOCATION_KEY,
+  mapFrontmatterToCatalogItem,
+} from "./map-frontmatter.js";
 
 export type SetItemEnabledSuccess = {
   ok: true;
@@ -25,8 +29,9 @@ function toErrorMessage(error: unknown): string {
 }
 
 /**
- * MVP writes `enabled: true` explicitly (never removes the key) so enable/disable
- * are symmetric and easy to inspect in frontmatter.
+ * Persists UI enabled state using Cursor-native keys:
+ * Rules → `alwaysApply`; Skills → `disable-model-invocation` (inverted).
+ * Does not create, remove, or alter a leftover `enabled` key.
  */
 export async function setItemEnabled(
   workspaceRoot: string,
@@ -41,7 +46,10 @@ export async function setItemEnabled(
     const fileContents = await readFile(resolved.absolutePath, "utf8");
     const parsed = matter(fileContents);
     const existingData = isRecord(parsed.data) ? parsed.data : {};
-    const nextData: Record<string, unknown> = { ...existingData, enabled };
+    const nextData: Record<string, unknown> =
+      resolved.kind === "rule"
+        ? { ...existingData, [ALWAYS_APPLY_KEY]: enabled }
+        : { ...existingData, [DISABLE_MODEL_INVOCATION_KEY]: !enabled };
     const nextContents = matter.stringify(parsed.content, nextData);
 
     await writeFile(resolved.absolutePath, nextContents, "utf8");
