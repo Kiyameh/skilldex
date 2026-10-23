@@ -15,17 +15,17 @@ Descubre todo el catálogo de herramientas IA y lo muestra en un práctico dashb
 
 ## Instalación (VSIX)
 
-1. Genera el paquete (o [Descargate el generado](URLPENDIENTE)):
+1. Genera el paquete (o [descárgate el generado](https://github.com/Kiyameh/skilldex/raw/main/download/skilldex-1.0.0.vsix)):
 
    ```bash
    npm install
    npm run package
    ```
 
-   Se crea `skilldex-1.0.0.vsix` en la raíz del repositorio.
+   Se crea `download/skilldex-1.0.0.vsix`.
 
 2. En Cursor: paleta de comandos (F1)
-3. Escribe **Extensions: Install from VSIX…** → elige el `.vsix`.
+3. Escribe **Extensions: Install from VSIX…** → elige `download/skilldex-1.0.0.vsix`.
 4. Recarga la ventana si el editor lo pide.
 
 Para desinstalar: Extensions → SkillDex → Uninstall.
