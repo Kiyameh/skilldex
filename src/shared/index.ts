@@ -2,12 +2,16 @@ export type { CatalogItem, CatalogItemKind, CatalogPayload } from "./catalog.js"
 export { CATALOG_ITEM_KINDS } from "./catalog.js";
 export type {
   HostCatalogMessage,
+  HostOpenResultFailureMessage,
+  HostOpenResultMessage,
+  HostOpenResultSuccessMessage,
   HostReadyMessage,
   HostToggleResultFailureMessage,
   HostToggleResultMessage,
   HostToggleResultSuccessMessage,
   HostToWebviewMessage,
   WebviewCatalogRequestMessage,
+  WebviewOpenItemMessage,
   WebviewReadyMessage,
   WebviewToHostMessage,
   WebviewToggleEnabledMessage,

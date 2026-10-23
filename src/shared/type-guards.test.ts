@@ -48,6 +48,27 @@ describe("isHostToWebviewMessage", () => {
     ).toBe(true);
   });
 
+  it("accepts a well-formed open result success message", () => {
+    expect(
+      isHostToWebviewMessage({
+        type: HOST_TO_WEBVIEW_MESSAGE_TYPES.openResult,
+        ok: true,
+        id: SAMPLE_CATALOG_ITEM.id,
+      }),
+    ).toBe(true);
+  });
+
+  it("accepts a well-formed open result failure message", () => {
+    expect(
+      isHostToWebviewMessage({
+        type: HOST_TO_WEBVIEW_MESSAGE_TYPES.openResult,
+        ok: false,
+        id: SAMPLE_CATALOG_ITEM.id,
+        error: "file not found",
+      }),
+    ).toBe(true);
+  });
+
   it("rejects payloads that are not host messages", () => {
     expect(isHostToWebviewMessage(null)).toBe(false);
     expect(isHostToWebviewMessage(undefined)).toBe(false);
@@ -73,7 +94,7 @@ describe("isHostToWebviewMessage", () => {
 });
 
 describe("isWebviewToHostMessage", () => {
-  it("accepts ready, catalog request, and toggle enabled messages", () => {
+  it("accepts ready, catalog request, toggle enabled, and open item messages", () => {
     expect(isWebviewToHostMessage({ type: WEBVIEW_TO_HOST_MESSAGE_TYPES.ready })).toBe(true);
     expect(isWebviewToHostMessage({ type: WEBVIEW_TO_HOST_MESSAGE_TYPES.catalogRequest })).toBe(
       true,
@@ -83,6 +104,12 @@ describe("isWebviewToHostMessage", () => {
         type: WEBVIEW_TO_HOST_MESSAGE_TYPES.toggleEnabled,
         id: SAMPLE_CATALOG_ITEM.id,
         enabled: false,
+      }),
+    ).toBe(true);
+    expect(
+      isWebviewToHostMessage({
+        type: WEBVIEW_TO_HOST_MESSAGE_TYPES.openItem,
+        id: SAMPLE_CATALOG_ITEM.id,
       }),
     ).toBe(true);
   });
@@ -95,6 +122,11 @@ describe("isWebviewToHostMessage", () => {
       isWebviewToHostMessage({
         type: WEBVIEW_TO_HOST_MESSAGE_TYPES.toggleEnabled,
         id: SAMPLE_CATALOG_ITEM.id,
+      }),
+    ).toBe(false);
+    expect(
+      isWebviewToHostMessage({
+        type: WEBVIEW_TO_HOST_MESSAGE_TYPES.openItem,
       }),
     ).toBe(false);
   });

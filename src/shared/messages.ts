@@ -4,12 +4,14 @@ export const HOST_TO_WEBVIEW_MESSAGE_TYPES = {
   ready: "host/ready",
   catalog: "host/catalog",
   toggleResult: "host/toggleResult",
+  openResult: "host/openResult",
 } as const;
 
 export const WEBVIEW_TO_HOST_MESSAGE_TYPES = {
   ready: "webview/ready",
   catalogRequest: "webview/catalogRequest",
   toggleEnabled: "webview/toggleEnabled",
+  openItem: "webview/openItem",
 } as const;
 
 export type HostReadyMessage = {
@@ -39,7 +41,23 @@ export type HostToggleResultFailureMessage = {
 export type HostToggleResultMessage =
   HostToggleResultSuccessMessage | HostToggleResultFailureMessage;
 
-export type HostToWebviewMessage = HostReadyMessage | HostCatalogMessage | HostToggleResultMessage;
+export type HostOpenResultSuccessMessage = {
+  type: (typeof HOST_TO_WEBVIEW_MESSAGE_TYPES)["openResult"];
+  ok: true;
+  id: string;
+};
+
+export type HostOpenResultFailureMessage = {
+  type: (typeof HOST_TO_WEBVIEW_MESSAGE_TYPES)["openResult"];
+  ok: false;
+  id: string;
+  error: string;
+};
+
+export type HostOpenResultMessage = HostOpenResultSuccessMessage | HostOpenResultFailureMessage;
+
+export type HostToWebviewMessage =
+  HostReadyMessage | HostCatalogMessage | HostToggleResultMessage | HostOpenResultMessage;
 
 export type WebviewReadyMessage = {
   type: (typeof WEBVIEW_TO_HOST_MESSAGE_TYPES)["ready"];
@@ -55,5 +73,13 @@ export type WebviewToggleEnabledMessage = {
   enabled: boolean;
 };
 
+export type WebviewOpenItemMessage = {
+  type: (typeof WEBVIEW_TO_HOST_MESSAGE_TYPES)["openItem"];
+  id: string;
+};
+
 export type WebviewToHostMessage =
-  WebviewReadyMessage | WebviewCatalogRequestMessage | WebviewToggleEnabledMessage;
+  | WebviewReadyMessage
+  | WebviewCatalogRequestMessage
+  | WebviewToggleEnabledMessage
+  | WebviewOpenItemMessage;
