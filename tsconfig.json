@@ -3,6 +3,7 @@
   "references": [
     { "path": "./tsconfig.extension.json" },
     { "path": "./tsconfig.webview.json" },
-    { "path": "./tsconfig.vitest.json" }
+    { "path": "./tsconfig.vitest.json" },
+    { "path": "./tsconfig.integration.json" }
   ]
 }
