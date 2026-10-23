@@ -26,6 +26,27 @@ describe("SkillCard", () => {
     expect(screen.getByRole("button", { name: "Editar" })).toBeInTheDocument();
   });
 
+  it("shows muted version to the right of the name when present", () => {
+    render(
+      <SkillCard
+        item={buildSkill({ version: "1.0.0" })}
+        onToggleEnabled={vi.fn()}
+        onOpenItem={vi.fn()}
+      />,
+    );
+
+    expect(screen.getByText("1.0.0")).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: "demo-skill" })).toBeInTheDocument();
+  });
+
+  it("does not reserve space for version when absent", () => {
+    render(<SkillCard item={buildSkill()} onToggleEnabled={vi.fn()} onOpenItem={vi.fn()} />);
+
+    const heading = screen.getByRole("heading", { name: "demo-skill" });
+    expect(heading.nextElementSibling).toBeNull();
+    expect(screen.queryByText("1.0.0")).not.toBeInTheDocument();
+  });
+
   it("shows disabled state and missing description fallback", () => {
     const { description, ...skillWithoutDescription } = buildSkill({ enabled: false });
     void description;

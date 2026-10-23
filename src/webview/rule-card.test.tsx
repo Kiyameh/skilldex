@@ -12,38 +12,50 @@ function buildRule(overrides: Partial<CatalogItem> = {}): CatalogItem {
     title: "example-rule",
     description: "Rule description",
     globs: ["**/*.ts"],
+    sections: ["Overview", "Details"],
     ...overrides,
   };
 }
 
 describe("RuleCard", () => {
-  it("shows title, description, globs, and enabled switch", () => {
+  it("shows title, sections list, globs, and enabled switch without description", () => {
     render(<RuleCard item={buildRule()} onToggleEnabled={vi.fn()} onOpenItem={vi.fn()} />);
 
     expect(screen.getByRole("article", { name: "example-rule" })).toBeInTheDocument();
     expect(screen.getByRole("heading", { name: "example-rule" })).toBeInTheDocument();
-    expect(screen.getByText("Rule description")).toBeInTheDocument();
+    expect(screen.getByLabelText("Secciones")).toHaveTextContent("Overview");
+    expect(screen.getByLabelText("Secciones")).toHaveTextContent("Details");
+    expect(screen.queryByText("Rule description")).not.toBeInTheDocument();
     expect(screen.getByLabelText("Globs")).toHaveTextContent("**/*.ts");
     expect(screen.getByRole("switch", { name: "Activa" })).toHaveAttribute("aria-checked", "true");
     expect(screen.getByRole("button", { name: "Editar" })).toBeInTheDocument();
   });
 
-  it("shows empty globs indication and disabled state", () => {
-    const { description, ...ruleWithoutDescription } = buildRule({
-      enabled: false,
-      globs: [],
-    });
-    void description;
+  it("shows empty sections and globs copy when both are empty", () => {
     render(
-      <RuleCard item={ruleWithoutDescription} onToggleEnabled={vi.fn()} onOpenItem={vi.fn()} />,
+      <RuleCard
+        item={buildRule({ enabled: false, globs: [], sections: [] })}
+        onToggleEnabled={vi.fn()}
+        onOpenItem={vi.fn()}
+      />,
     );
 
-    expect(screen.getByText("Sin descripción")).toBeInTheDocument();
+    expect(screen.getByText("No hay secciones")).toBeInTheDocument();
     expect(screen.getByText("Sin globs")).toBeInTheDocument();
     expect(screen.getByRole("switch", { name: "Inactiva" })).toHaveAttribute(
       "aria-checked",
       "false",
     );
+  });
+
+  it("treats missing sections like an empty list", () => {
+    const { sections, ...ruleWithoutSections } = buildRule({ globs: [] });
+    void sections;
+    render(
+      <RuleCard item={ruleWithoutSections} onToggleEnabled={vi.fn()} onOpenItem={vi.fn()} />,
+    );
+
+    expect(screen.getByText("No hay secciones")).toBeInTheDocument();
   });
 
   it("requests the target enabled state when the switch is activated", () => {

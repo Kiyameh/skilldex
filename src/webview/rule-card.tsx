@@ -9,7 +9,7 @@ interface RuleCardProps {
   toggleDisabled?: boolean;
 }
 
-const MISSING_DESCRIPTION = "Sin descripción";
+const NO_SECTIONS_LABEL = "No hay secciones";
 const EMPTY_GLOBS_LABEL = "Sin globs";
 
 export function RuleCard({
@@ -19,7 +19,8 @@ export function RuleCard({
   toggleDisabled = false,
 }: RuleCardProps) {
   const title = item.title ?? item.id;
-  const description = item.description ?? MISSING_DESCRIPTION;
+  const sections = item.sections ?? [];
+  const hasSections = sections.length > 0;
   const globs = item.globs ?? [];
   const hasGlobs = globs.length > 0;
 
@@ -37,7 +38,15 @@ export function RuleCard({
         />
       </header>
       <div className="mt-3 flex items-start justify-between gap-3">
-        <p className="m-0 min-w-0 flex-1 text-xs opacity-80">{description}</p>
+        {hasSections ? (
+          <ul className="m-0 min-w-0 flex-1 list-none p-0 text-xs opacity-80" aria-label="Secciones">
+            {sections.map((section) => (
+              <li key={section}>{section}</li>
+            ))}
+          </ul>
+        ) : (
+          <p className="m-0 min-w-0 flex-1 text-xs opacity-80">{NO_SECTIONS_LABEL}</p>
+        )}
         <EditButton onClick={() => onOpenItem(item)} />
       </div>
       {hasGlobs ? (

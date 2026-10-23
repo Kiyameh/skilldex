@@ -10,6 +10,17 @@ const sampleRule: CatalogItem = {
   enabled: false,
   title: "example-rule",
   globs: [],
+  sections: [],
+};
+
+const nestedRule: CatalogItem = {
+  id: ".cursor/rules/nested/deep-rule.mdc",
+  kind: "rule",
+  path: "/tmp/.cursor/rules/nested/deep-rule.mdc",
+  enabled: true,
+  title: "deep-rule",
+  globs: ["**/*.ts"],
+  sections: ["Alpha"],
 };
 
 describe("RulesSection", () => {
@@ -18,6 +29,23 @@ describe("RulesSection", () => {
 
     expect(screen.getByRole("heading", { name: "Rules", level: 2 })).toBeInTheDocument();
     expect(screen.getByRole("article", { name: "example-rule" })).toBeInTheDocument();
+  });
+
+  it("keeps nested rules in a flat list without category headers", () => {
+    render(
+      <RulesSection
+        rules={[sampleRule, nestedRule]}
+        onToggleEnabled={vi.fn()}
+        onOpenItem={vi.fn()}
+      />,
+    );
+
+    expect(screen.getByRole("heading", { name: "Rules", level: 2 })).toBeInTheDocument();
+    expect(screen.getAllByRole("heading", { level: 2 })).toHaveLength(1);
+    expect(screen.queryByRole("heading", { name: "Sin categoría" })).not.toBeInTheDocument();
+    expect(screen.queryByRole("heading", { name: "Nested" })).not.toBeInTheDocument();
+    expect(screen.getByRole("article", { name: "example-rule" })).toBeInTheDocument();
+    expect(screen.getByRole("article", { name: "deep-rule" })).toBeInTheDocument();
   });
 
   it("shows an empty state when there are no rules", () => {

@@ -19,6 +19,7 @@ export function SkillCard({
 }: SkillCardProps) {
   const name = item.title ?? item.id;
   const description = item.description ?? MISSING_DESCRIPTION;
+  const version = item.version;
 
   return (
     <article
@@ -26,7 +27,12 @@ export function SkillCard({
       aria-label={name}
     >
       <header className="flex items-center justify-between gap-2">
-        <h3 className="m-0 truncate text-sm font-medium">{name}</h3>
+        <div className="flex min-w-0 items-baseline gap-2">
+          <h4 className="m-0 truncate text-sm font-medium">{name}</h4>
+          {version !== undefined ? (
+            <span className="shrink-0 text-xs opacity-70">{version}</span>
+          ) : null}
+        </div>
         <EnabledToggle
           enabled={item.enabled}
           disabled={toggleDisabled}
