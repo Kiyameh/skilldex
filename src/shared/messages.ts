@@ -5,6 +5,7 @@ export const HOST_TO_WEBVIEW_MESSAGE_TYPES = {
   catalog: "host/catalog",
   toggleResult: "host/toggleResult",
   openResult: "host/openResult",
+  settings: "host/settings",
 } as const;
 
 export const WEBVIEW_TO_HOST_MESSAGE_TYPES = {
@@ -12,7 +13,14 @@ export const WEBVIEW_TO_HOST_MESSAGE_TYPES = {
   catalogRequest: "webview/catalogRequest",
   toggleEnabled: "webview/toggleEnabled",
   openItem: "webview/openItem",
+  openSettings: "webview/openSettings",
 } as const;
+
+export interface SkilldexSettings {
+  showSkills: boolean;
+  showRules: boolean;
+  remoteSkillsRepositoryUrl: string;
+}
 
 export type HostReadyMessage = {
   type: (typeof HOST_TO_WEBVIEW_MESSAGE_TYPES)["ready"];
@@ -56,8 +64,19 @@ export type HostOpenResultFailureMessage = {
 
 export type HostOpenResultMessage = HostOpenResultSuccessMessage | HostOpenResultFailureMessage;
 
+export type HostSettingsMessage = {
+  type: (typeof HOST_TO_WEBVIEW_MESSAGE_TYPES)["settings"];
+  showSkills: boolean;
+  showRules: boolean;
+  remoteSkillsRepositoryUrl: string;
+};
+
 export type HostToWebviewMessage =
-  HostReadyMessage | HostCatalogMessage | HostToggleResultMessage | HostOpenResultMessage;
+  | HostReadyMessage
+  | HostCatalogMessage
+  | HostToggleResultMessage
+  | HostOpenResultMessage
+  | HostSettingsMessage;
 
 export type WebviewReadyMessage = {
   type: (typeof WEBVIEW_TO_HOST_MESSAGE_TYPES)["ready"];
@@ -78,8 +97,13 @@ export type WebviewOpenItemMessage = {
   id: string;
 };
 
+export type WebviewOpenSettingsMessage = {
+  type: (typeof WEBVIEW_TO_HOST_MESSAGE_TYPES)["openSettings"];
+};
+
 export type WebviewToHostMessage =
   | WebviewReadyMessage
   | WebviewCatalogRequestMessage
   | WebviewToggleEnabledMessage
-  | WebviewOpenItemMessage;
+  | WebviewOpenItemMessage
+  | WebviewOpenSettingsMessage;

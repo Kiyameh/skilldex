@@ -54,6 +54,32 @@
           "name": "SkillDex"
         }
       ]
+    },
+    "configuration": {
+      "title": "SkillDex",
+      "properties": {
+        "skilldex.showSkills": {
+          "type": "boolean",
+          "default": true,
+          "scope": "application",
+          "order": 1,
+          "description": "Muestra la sección de Skills en el panel de SkillDex."
+        },
+        "skilldex.showRules": {
+          "type": "boolean",
+          "default": true,
+          "scope": "application",
+          "order": 2,
+          "description": "Muestra la sección de Rules en el panel de SkillDex."
+        },
+        "skilldex.remoteSkillsRepositoryUrl": {
+          "type": "string",
+          "default": "",
+          "scope": "window",
+          "order": 3,
+          "description": "URL del repositorio remoto de skills. SkillDex la guarda y todavía no la usa."
+        }
+      }
     }
   },
   "scripts": {

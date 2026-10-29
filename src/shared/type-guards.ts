@@ -4,6 +4,7 @@ import {
   WEBVIEW_TO_HOST_MESSAGE_TYPES,
   type HostCatalogMessage,
   type HostOpenResultMessage,
+  type HostSettingsMessage,
   type HostToggleResultMessage,
   type HostToWebviewMessage,
   type WebviewOpenItemMessage,
@@ -90,18 +91,29 @@ function isWebviewOpenItemMessage(value: Record<string, unknown>): value is Webv
   );
 }
 
+function isHostSettingsMessage(value: Record<string, unknown>): value is HostSettingsMessage {
+  return (
+    value["type"] === HOST_TO_WEBVIEW_MESSAGE_TYPES.settings &&
+    typeof value["showSkills"] === "boolean" &&
+    typeof value["showRules"] === "boolean" &&
+    typeof value["remoteSkillsRepositoryUrl"] === "string"
+  );
+}
+
 export function isHostToWebviewMessage(value: unknown): value is HostToWebviewMessage {
   if (!isRecord(value)) return false;
   if (value["type"] === HOST_TO_WEBVIEW_MESSAGE_TYPES.ready) return true;
   if (isHostCatalogMessage(value)) return true;
   if (isHostToggleResultMessage(value)) return true;
-  return isHostOpenResultMessage(value);
+  if (isHostOpenResultMessage(value)) return true;
+  return isHostSettingsMessage(value);
 }
 
 export function isWebviewToHostMessage(value: unknown): value is WebviewToHostMessage {
   if (!isRecord(value)) return false;
   if (value["type"] === WEBVIEW_TO_HOST_MESSAGE_TYPES.ready) return true;
   if (value["type"] === WEBVIEW_TO_HOST_MESSAGE_TYPES.catalogRequest) return true;
+  if (value["type"] === WEBVIEW_TO_HOST_MESSAGE_TYPES.openSettings) return true;
   if (isWebviewToggleEnabledMessage(value)) return true;
   return isWebviewOpenItemMessage(value);
 }
