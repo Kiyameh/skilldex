@@ -39,3 +39,7 @@ export function requestToggleEnabled(id: string, enabled: boolean): void {
 export function requestOpenItem(id: string): void {
   postToHost({ type: WEBVIEW_TO_HOST_MESSAGE_TYPES.openItem, id });
 }
+
+export function requestOpenSettings(): void {
+  postToHost({ type: WEBVIEW_TO_HOST_MESSAGE_TYPES.openSettings });
+}

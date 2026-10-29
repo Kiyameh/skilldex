@@ -20,6 +20,8 @@ interface CatalogTabsProps {
   rules: CatalogItem[];
   unfilteredSkillsCount: number;
   unfilteredRulesCount: number;
+  showSkills: boolean;
+  showRules: boolean;
   onToggleEnabled: (item: CatalogItem, nextEnabled: boolean) => void;
   onOpenItem: (item: CatalogItem) => void;
   pendingToggleIds?: ReadonlySet<string> | undefined;
@@ -48,12 +50,44 @@ export function CatalogTabs({
   rules,
   unfilteredSkillsCount,
   unfilteredRulesCount,
+  showSkills,
+  showRules,
   onToggleEnabled,
   onOpenItem,
   pendingToggleIds,
 }: CatalogTabsProps) {
   const [selectedTab, setSelectedTab] = useState<CatalogTabId>(DEFAULT_CATALOG_TAB);
   const tabButtonRefs = useRef<Partial<Record<CatalogTabId, HTMLButtonElement>>>({});
+
+  if (showSkills && !showRules) {
+    return (
+      <div className="flex min-h-0 flex-1 flex-col">
+        <SkillsSection
+          skills={skills}
+          unfilteredCount={unfilteredSkillsCount}
+          onToggleEnabled={onToggleEnabled}
+          onOpenItem={onOpenItem}
+          pendingToggleIds={pendingToggleIds}
+        />
+      </div>
+    );
+  }
+
+  if (!showSkills && showRules) {
+    return (
+      <div className="flex min-h-0 flex-1 flex-col">
+        <RulesSection
+          rules={rules}
+          unfilteredCount={unfilteredRulesCount}
+          onToggleEnabled={onToggleEnabled}
+          onOpenItem={onOpenItem}
+          pendingToggleIds={pendingToggleIds}
+        />
+      </div>
+    );
+  }
+
+  if (!showSkills && !showRules) return null;
 
   function selectTab(tabId: CatalogTabId, shouldFocus: boolean) {
     setSelectedTab(tabId);
