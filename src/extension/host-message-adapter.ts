@@ -5,10 +5,12 @@ import {
   isWebviewToHostMessage,
   type CatalogPayload,
   type HostToWebviewMessage,
+  type SkilldexSettings,
   type WebviewOpenItemMessage,
   type WebviewToHostMessage,
   type WebviewToggleEnabledMessage,
 } from "../shared/index.js";
+import { OPEN_NATIVE_SETTINGS_COMMAND, SKILLDEX_CONFIGURATION_SECTION } from "./constants.js";
 import { discoverCatalog } from "./discover-catalog.js";
 import { openCatalogItem } from "./open-catalog-item.js";
 import { setItemEnabled } from "./set-item-enabled.js";
@@ -17,8 +19,18 @@ const HANDSHAKE_RETRY_ATTEMPTS = 20;
 const HANDSHAKE_RETRY_INTERVAL_MS = 100;
 const MISSING_WORKSPACE_ERROR = "No workspace folder is open";
 
+export interface SkilldexConfigurationChangeEvent {
+  affectsConfiguration: (section: string) => boolean;
+}
+
 export interface HostMessageAdapterOptions {
   getWorkspaceRoot: () => string | undefined;
+  readSettings: () => SkilldexSettings;
+  subscribeToConfigurationChanges: (
+    listener: (event: SkilldexConfigurationChangeEvent) => void,
+  ) => Disposable;
+  extensionId: string;
+  executeCommand: (command: string, argument: string) => void;
 }
 
 export function postHostMessage(webview: Webview, message: HostToWebviewMessage): void {
@@ -30,6 +42,15 @@ export function postCatalog(webview: Webview, catalog: CatalogPayload): void {
     type: HOST_TO_WEBVIEW_MESSAGE_TYPES.catalog,
     skills: catalog.skills,
     rules: catalog.rules,
+  });
+}
+
+function postSettings(webview: Webview, settings: SkilldexSettings): void {
+  postHostMessage(webview, {
+    type: HOST_TO_WEBVIEW_MESSAGE_TYPES.settings,
+    showSkills: settings.showSkills,
+    showRules: settings.showRules,
+    remoteSkillsRepositoryUrl: settings.remoteSkillsRepositoryUrl,
   });
 }
 
@@ -157,11 +178,27 @@ export function startHostMessageHandling(
       return;
     }
 
-    if (message.type === WEBVIEW_TO_HOST_MESSAGE_TYPES.openItem)
+    if (message.type === WEBVIEW_TO_HOST_MESSAGE_TYPES.openItem) {
       void replyToOpenItem(webview, options.getWorkspaceRoot, message);
+      return;
+    }
+
+    if (message.type === WEBVIEW_TO_HOST_MESSAGE_TYPES.openSettings)
+      options.executeCommand(OPEN_NATIVE_SETTINGS_COMMAND, `@ext:${options.extensionId}`);
   });
 
-  sendHostReady();
+  const configurationSubscription = options.subscribeToConfigurationChanges((event) => {
+    if (!event.affectsConfiguration(SKILLDEX_CONFIGURATION_SECTION)) return;
+    postSettings(webview, options.readSettings());
+  });
+
+  const sendSessionStart = (): void => {
+    sendHostReady();
+    if (handshakeCompleted) return;
+    postSettings(webview, options.readSettings());
+  };
+
+  sendSessionStart();
   retryIntervalId = setInterval(() => {
     attempts += 1;
     if (handshakeCompleted || attempts >= HANDSHAKE_RETRY_ATTEMPTS) {
@@ -169,12 +206,13 @@ export function startHostMessageHandling(
       retryIntervalId = undefined;
       return;
     }
-    sendHostReady();
+    sendSessionStart();
   }, HANDSHAKE_RETRY_INTERVAL_MS);
 
   return {
     dispose: () => {
       subscription.dispose();
+      configurationSubscription.dispose();
       clearHandshakeRetry(retryIntervalId);
       retryIntervalId = undefined;
     },
