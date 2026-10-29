@@ -69,6 +69,45 @@ describe("isHostToWebviewMessage", () => {
     ).toBe(true);
   });
 
+  it("accepts a settings snapshot with the three typed fields", () => {
+    expect(
+      isHostToWebviewMessage({
+        type: HOST_TO_WEBVIEW_MESSAGE_TYPES.settings,
+        showSkills: true,
+        showRules: false,
+        remoteSkillsRepositoryUrl: "https://example.com/skills",
+      }),
+    ).toBe(true);
+  });
+
+  it("rejects a boolean payload or a settings URL that is not a string", () => {
+    expect(isHostToWebviewMessage(true)).toBe(false);
+    expect(
+      isHostToWebviewMessage({
+        type: HOST_TO_WEBVIEW_MESSAGE_TYPES.settings,
+        showSkills: "yes",
+        showRules: true,
+        remoteSkillsRepositoryUrl: "",
+      }),
+    ).toBe(false);
+    expect(
+      isHostToWebviewMessage({
+        type: HOST_TO_WEBVIEW_MESSAGE_TYPES.settings,
+        showSkills: true,
+        showRules: true,
+        remoteSkillsRepositoryUrl: true,
+      }),
+    ).toBe(false);
+    expect(
+      isHostToWebviewMessage({
+        type: HOST_TO_WEBVIEW_MESSAGE_TYPES.settings,
+        showSkills: true,
+        showRules: true,
+        remoteSkillsRepositoryUrl: 12,
+      }),
+    ).toBe(false);
+  });
+
   it("rejects payloads that are not host messages", () => {
     expect(isHostToWebviewMessage(null)).toBe(false);
     expect(isHostToWebviewMessage(undefined)).toBe(false);
@@ -112,9 +151,11 @@ describe("isWebviewToHostMessage", () => {
         id: SAMPLE_CATALOG_ITEM.id,
       }),
     ).toBe(true);
+    expect(isWebviewToHostMessage({ type: WEBVIEW_TO_HOST_MESSAGE_TYPES.openSettings })).toBe(true);
   });
 
   it("rejects payloads that are not webview-to-host messages", () => {
+    expect(isWebviewToHostMessage(true)).toBe(false);
     expect(isWebviewToHostMessage(null)).toBe(false);
     expect(isWebviewToHostMessage({ type: HOST_TO_WEBVIEW_MESSAGE_TYPES.ready })).toBe(false);
     expect(isWebviewToHostMessage({ type: "unknown" })).toBe(false);

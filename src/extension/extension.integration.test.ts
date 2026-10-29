@@ -18,4 +18,16 @@ suite("SkillDex extension scaffold", () => {
       `${OPEN_DASHBOARD_COMMAND} should be registered`,
     );
   });
+
+  test("exposes SkillDex setting defaults after activation", async () => {
+    const extension = vscode.extensions.getExtension(SKILLDEX_EXTENSION_ID);
+    assert.ok(extension, "SkillDex extension should be installed in the test host");
+
+    await extension.activate();
+
+    const configuration = vscode.workspace.getConfiguration("skilldex");
+    assert.equal(configuration.get("showSkills"), true);
+    assert.equal(configuration.get("showRules"), true);
+    assert.equal(configuration.get("remoteSkillsRepositoryUrl"), "");
+  });
 });

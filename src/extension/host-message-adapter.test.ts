@@ -1,7 +1,12 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 import type { Disposable, Webview } from "vscode";
 import { HOST_TO_WEBVIEW_MESSAGE_TYPES, WEBVIEW_TO_HOST_MESSAGE_TYPES } from "../shared/index.js";
-import { startHostMessageHandling } from "./host-message-adapter.js";
+import { discoverCatalog } from "./discover-catalog.js";
+import {
+  startHostMessageHandling,
+  type HostMessageAdapterOptions,
+  type SkilldexConfigurationChangeEvent,
+} from "./host-message-adapter.js";
 import { openCatalogItem } from "./open-catalog-item.js";
 import { setItemEnabled } from "./set-item-enabled.js";
 
@@ -13,8 +18,47 @@ vi.mock("./open-catalog-item.js", () => ({
   openCatalogItem: vi.fn(),
 }));
 
+vi.mock("./discover-catalog.js", () => ({
+  discoverCatalog: vi.fn(),
+}));
+
 const mockedSetItemEnabled = vi.mocked(setItemEnabled);
 const mockedOpenCatalogItem = vi.mocked(openCatalogItem);
+const mockedDiscoverCatalog = vi.mocked(discoverCatalog);
+
+const DEFAULT_SETTINGS = {
+  showSkills: true,
+  showRules: true,
+  remoteSkillsRepositoryUrl: "",
+};
+
+function handlingOptions(
+  overrides: Partial<HostMessageAdapterOptions> = {},
+): HostMessageAdapterOptions {
+  return {
+    getWorkspaceRoot: () => undefined,
+    readSettings: () => DEFAULT_SETTINGS,
+    subscribeToConfigurationChanges: () => ({ dispose: () => undefined }),
+    extensionId: "andoni.skilldex",
+    executeCommand: () => undefined,
+    ...overrides,
+  };
+}
+
+const SESSION_START_MESSAGES = [
+  { type: HOST_TO_WEBVIEW_MESSAGE_TYPES.ready },
+  { type: HOST_TO_WEBVIEW_MESSAGE_TYPES.settings, ...DEFAULT_SETTINGS },
+];
+
+function readyMessageCount(posted: unknown[]): number {
+  return posted.filter(
+    (message) =>
+      typeof message === "object" &&
+      message !== null &&
+      "type" in message &&
+      message.type === HOST_TO_WEBVIEW_MESSAGE_TYPES.ready,
+  ).length;
+}
 
 interface FakeWebview {
   webview: Webview;
@@ -63,15 +107,14 @@ describe("startHostMessageHandling", () => {
     vi.useRealTimers();
     mockedSetItemEnabled.mockReset();
     mockedOpenCatalogItem.mockReset();
+    mockedDiscoverCatalog.mockReset();
   });
 
   it("posts host ready immediately and completes after webview ready", () => {
     const { webview, posted, emit } = createFakeWebview();
-    const handling = startHostMessageHandling(webview, {
-      getWorkspaceRoot: () => undefined,
-    });
+    const handling = startHostMessageHandling(webview, handlingOptions());
 
-    expect(posted).toEqual([{ type: HOST_TO_WEBVIEW_MESSAGE_TYPES.ready }]);
+    expect(posted).toEqual(SESSION_START_MESSAGES);
 
     emit({ type: WEBVIEW_TO_HOST_MESSAGE_TYPES.ready });
     handling.dispose();
@@ -80,13 +123,11 @@ describe("startHostMessageHandling", () => {
   it("retries host ready until the webview replies", async () => {
     vi.useFakeTimers();
     const { webview, posted, emit } = createFakeWebview();
-    const handling = startHostMessageHandling(webview, {
-      getWorkspaceRoot: () => undefined,
-    });
+    const handling = startHostMessageHandling(webview, handlingOptions());
 
-    expect(posted).toHaveLength(1);
+    expect(readyMessageCount(posted)).toBe(1);
     await vi.advanceTimersByTimeAsync(100);
-    expect(posted.length).toBeGreaterThan(1);
+    expect(readyMessageCount(posted)).toBeGreaterThan(1);
 
     emit({ type: WEBVIEW_TO_HOST_MESSAGE_TYPES.ready });
     const postedAfterHandshake = posted.length;
@@ -98,9 +139,7 @@ describe("startHostMessageHandling", () => {
 
   it("does not complete handshake on catalog request", () => {
     const { webview, posted, emit } = createFakeWebview();
-    const handling = startHostMessageHandling(webview, {
-      getWorkspaceRoot: () => undefined,
-    });
+    const handling = startHostMessageHandling(webview, handlingOptions());
 
     emit({ type: WEBVIEW_TO_HOST_MESSAGE_TYPES.catalogRequest });
     expect(posted[0]).toEqual({ type: HOST_TO_WEBVIEW_MESSAGE_TYPES.ready });
@@ -119,9 +158,7 @@ describe("startHostMessageHandling", () => {
 
   it("replies with an empty catalog when workspace root is missing", async () => {
     const { webview, posted, emit } = createFakeWebview();
-    const handling = startHostMessageHandling(webview, {
-      getWorkspaceRoot: () => undefined,
-    });
+    const handling = startHostMessageHandling(webview, handlingOptions());
 
     emit({ type: WEBVIEW_TO_HOST_MESSAGE_TYPES.catalogRequest });
     await vi.waitFor(() => {
@@ -137,22 +174,18 @@ describe("startHostMessageHandling", () => {
 
   it("ignores payloads that are not webview-to-host messages", () => {
     const { webview, posted, emit } = createFakeWebview();
-    const handling = startHostMessageHandling(webview, {
-      getWorkspaceRoot: () => undefined,
-    });
+    const handling = startHostMessageHandling(webview, handlingOptions());
 
     emit({ type: "unknown" });
     emit(null);
-    expect(posted).toEqual([{ type: HOST_TO_WEBVIEW_MESSAGE_TYPES.ready }]);
+    expect(posted).toEqual(SESSION_START_MESSAGES);
 
     handling.dispose();
   });
 
   it("replies with toggle failure when workspace root is missing", async () => {
     const { webview, posted, emit } = createFakeWebview();
-    const handling = startHostMessageHandling(webview, {
-      getWorkspaceRoot: () => undefined,
-    });
+    const handling = startHostMessageHandling(webview, handlingOptions());
 
     emit({
       type: WEBVIEW_TO_HOST_MESSAGE_TYPES.toggleEnabled,
@@ -177,9 +210,12 @@ describe("startHostMessageHandling", () => {
   it("replies with toggle success when setItemEnabled succeeds", async () => {
     mockedSetItemEnabled.mockResolvedValue({ ok: true, item: SAMPLE_ITEM });
     const { webview, posted, emit } = createFakeWebview();
-    const handling = startHostMessageHandling(webview, {
-      getWorkspaceRoot: () => "/tmp/workspace",
-    });
+    const handling = startHostMessageHandling(
+      webview,
+      handlingOptions({
+        getWorkspaceRoot: () => "/tmp/workspace",
+      }),
+    );
 
     emit({
       type: WEBVIEW_TO_HOST_MESSAGE_TYPES.toggleEnabled,
@@ -202,9 +238,12 @@ describe("startHostMessageHandling", () => {
   it("replies with toggle failure when setItemEnabled fails", async () => {
     mockedSetItemEnabled.mockResolvedValue({ ok: false, error: "EACCES" });
     const { webview, posted, emit } = createFakeWebview();
-    const handling = startHostMessageHandling(webview, {
-      getWorkspaceRoot: () => "/tmp/workspace",
-    });
+    const handling = startHostMessageHandling(
+      webview,
+      handlingOptions({
+        getWorkspaceRoot: () => "/tmp/workspace",
+      }),
+    );
 
     emit({
       type: WEBVIEW_TO_HOST_MESSAGE_TYPES.toggleEnabled,
@@ -227,9 +266,7 @@ describe("startHostMessageHandling", () => {
 
   it("replies with open failure when workspace root is missing", async () => {
     const { webview, posted, emit } = createFakeWebview();
-    const handling = startHostMessageHandling(webview, {
-      getWorkspaceRoot: () => undefined,
-    });
+    const handling = startHostMessageHandling(webview, handlingOptions());
 
     emit({
       type: WEBVIEW_TO_HOST_MESSAGE_TYPES.openItem,
@@ -252,9 +289,12 @@ describe("startHostMessageHandling", () => {
   it("replies with open success when openCatalogItem succeeds", async () => {
     mockedOpenCatalogItem.mockResolvedValue({ ok: true, id: SAMPLE_ITEM.id });
     const { webview, posted, emit } = createFakeWebview();
-    const handling = startHostMessageHandling(webview, {
-      getWorkspaceRoot: () => "/tmp/workspace",
-    });
+    const handling = startHostMessageHandling(
+      webview,
+      handlingOptions({
+        getWorkspaceRoot: () => "/tmp/workspace",
+      }),
+    );
 
     emit({
       type: WEBVIEW_TO_HOST_MESSAGE_TYPES.openItem,
@@ -280,9 +320,12 @@ describe("startHostMessageHandling", () => {
       error: "ENOENT",
     });
     const { webview, posted, emit } = createFakeWebview();
-    const handling = startHostMessageHandling(webview, {
-      getWorkspaceRoot: () => "/tmp/workspace",
-    });
+    const handling = startHostMessageHandling(
+      webview,
+      handlingOptions({
+        getWorkspaceRoot: () => "/tmp/workspace",
+      }),
+    );
 
     emit({
       type: WEBVIEW_TO_HOST_MESSAGE_TYPES.openItem,
@@ -300,4 +343,83 @@ describe("startHostMessageHandling", () => {
 
     handling.dispose();
   });
+
+  it("posts a settings snapshot at session start and again when the skilldex URL changes without discovering the catalog", () => {
+    let currentSettings = DEFAULT_SETTINGS;
+    const readSettings = vi.fn(() => currentSettings);
+    const disposeConfiguration = vi.fn();
+    let onConfigurationChange: ((event: SkilldexConfigurationChangeEvent) => void) | undefined;
+    const { webview, posted } = createFakeWebview();
+    const handling = startHostMessageHandling(
+      webview,
+      handlingOptions({
+        getWorkspaceRoot: () => "/tmp/workspace",
+        readSettings,
+        subscribeToConfigurationChanges: (listener) => {
+          onConfigurationChange = listener;
+          return { dispose: disposeConfiguration };
+        },
+      }),
+    );
+
+    expect(posted[0]).toEqual({ type: HOST_TO_WEBVIEW_MESSAGE_TYPES.ready });
+    expect(posted).toContainEqual({
+      type: HOST_TO_WEBVIEW_MESSAGE_TYPES.settings,
+      ...DEFAULT_SETTINGS,
+    });
+
+    onConfigurationChange?.({
+      affectsConfiguration: (section) => section !== "skilldex",
+    });
+    expect(posted.filter(isSettingsMessage)).toHaveLength(1);
+
+    currentSettings = {
+      showSkills: true,
+      showRules: true,
+      remoteSkillsRepositoryUrl: "https://github.com/org/skills",
+    };
+    onConfigurationChange?.({
+      affectsConfiguration: (section) => section === "skilldex",
+    });
+    expect(posted).toContainEqual({
+      type: HOST_TO_WEBVIEW_MESSAGE_TYPES.settings,
+      showSkills: true,
+      showRules: true,
+      remoteSkillsRepositoryUrl: "https://github.com/org/skills",
+    });
+    expect(mockedDiscoverCatalog).not.toHaveBeenCalled();
+
+    handling.dispose();
+    expect(disposeConfiguration).toHaveBeenCalledOnce();
+  });
+
+  it("opens native settings filtered to the extension", () => {
+    const executeCommand = vi.fn();
+    const { webview, emit } = createFakeWebview();
+    const handling = startHostMessageHandling(
+      webview,
+      handlingOptions({
+        extensionId: "andoni.skilldex",
+        executeCommand,
+      }),
+    );
+
+    emit({ type: WEBVIEW_TO_HOST_MESSAGE_TYPES.openSettings });
+
+    expect(executeCommand).toHaveBeenCalledWith(
+      "workbench.action.openSettings",
+      "@ext:andoni.skilldex",
+    );
+
+    handling.dispose();
+  });
 });
+
+function isSettingsMessage(message: unknown): boolean {
+  return (
+    typeof message === "object" &&
+    message !== null &&
+    "type" in message &&
+    message.type === HOST_TO_WEBVIEW_MESSAGE_TYPES.settings
+  );
+}

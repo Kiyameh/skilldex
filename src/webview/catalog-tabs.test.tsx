@@ -23,13 +23,24 @@ const sampleRule: CatalogItem = {
   sections: [],
 };
 
-function renderTabs() {
+function renderTabs(
+  overrides: Partial<{
+    skills: CatalogItem[];
+    rules: CatalogItem[];
+    unfilteredSkillsCount: number;
+    unfilteredRulesCount: number;
+    showSkills: boolean;
+    showRules: boolean;
+  }> = {},
+) {
   render(
     <CatalogTabs
-      skills={[sampleSkill]}
-      rules={[sampleRule]}
-      unfilteredSkillsCount={1}
-      unfilteredRulesCount={1}
+      skills={overrides.skills ?? [sampleSkill]}
+      rules={overrides.rules ?? [sampleRule]}
+      unfilteredSkillsCount={overrides.unfilteredSkillsCount ?? 1}
+      unfilteredRulesCount={overrides.unfilteredRulesCount ?? 1}
+      showSkills={overrides.showSkills ?? true}
+      showRules={overrides.showRules ?? true}
       onToggleEnabled={vi.fn()}
       onOpenItem={vi.fn()}
     />,
@@ -69,5 +80,35 @@ describe("CatalogTabs", () => {
 
     expect(skillsTab).toHaveFocus();
     expect(skillsTab).toHaveAttribute("aria-selected", "true");
+  });
+
+  it("shows only skills without a tab list and skips the rules empty state", () => {
+    renderTabs({
+      skills: [],
+      rules: [],
+      unfilteredSkillsCount: 0,
+      unfilteredRulesCount: 0,
+      showSkills: true,
+      showRules: false,
+    });
+
+    expect(screen.queryByRole("tablist")).not.toBeInTheDocument();
+    expect(screen.getByText("No hay skills todavía")).toBeInTheDocument();
+    expect(screen.queryByText("No hay rules todavía")).not.toBeInTheDocument();
+  });
+
+  it("shows only rules without a tab list and skips the skills empty state", () => {
+    renderTabs({
+      skills: [],
+      rules: [],
+      unfilteredSkillsCount: 0,
+      unfilteredRulesCount: 0,
+      showSkills: false,
+      showRules: true,
+    });
+
+    expect(screen.queryByRole("tablist")).not.toBeInTheDocument();
+    expect(screen.getByText("No hay rules todavía")).toBeInTheDocument();
+    expect(screen.queryByText("No hay skills todavía")).not.toBeInTheDocument();
   });
 });

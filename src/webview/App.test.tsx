@@ -23,25 +23,36 @@ const SAMPLE_RULE = {
   globs: [] as string[],
 };
 
-function connectAndLoadCatalog(): void {
+function dispatchHostMessage(data: unknown): void {
   act(() => {
-    window.dispatchEvent(
-      new MessageEvent("message", {
-        data: { type: HOST_TO_WEBVIEW_MESSAGE_TYPES.ready },
-      }),
-    );
+    window.dispatchEvent(new MessageEvent("message", { data }));
   });
+}
 
-  act(() => {
-    window.dispatchEvent(
-      new MessageEvent("message", {
-        data: {
-          type: HOST_TO_WEBVIEW_MESSAGE_TYPES.catalog,
-          skills: [SAMPLE_SKILL],
-          rules: [SAMPLE_RULE],
-        },
-      }),
-    );
+function dispatchSettings(
+  settings: {
+    showSkills: boolean;
+    showRules: boolean;
+    remoteSkillsRepositoryUrl: string;
+  } = {
+    showSkills: true,
+    showRules: true,
+    remoteSkillsRepositoryUrl: "",
+  },
+): void {
+  dispatchHostMessage({
+    type: HOST_TO_WEBVIEW_MESSAGE_TYPES.settings,
+    ...settings,
+  });
+}
+
+function connectAndLoadCatalog(): void {
+  dispatchHostMessage({ type: HOST_TO_WEBVIEW_MESSAGE_TYPES.ready });
+  dispatchSettings();
+  dispatchHostMessage({
+    type: HOST_TO_WEBVIEW_MESSAGE_TYPES.catalog,
+    skills: [SAMPLE_SKILL],
+    rules: [SAMPLE_RULE],
   });
 }
 
@@ -84,31 +95,27 @@ describe("App", () => {
   it("requests the catalog after handshake and shows the skills tab by default", () => {
     render(<App />);
 
-    act(() => {
-      window.dispatchEvent(
-        new MessageEvent("message", {
-          data: { type: HOST_TO_WEBVIEW_MESSAGE_TYPES.ready },
-        }),
-      );
-    });
+    dispatchHostMessage({ type: HOST_TO_WEBVIEW_MESSAGE_TYPES.ready });
 
     expect(postMessage).toHaveBeenCalledWith({
       type: WEBVIEW_TO_HOST_MESSAGE_TYPES.catalogRequest,
     });
     expect(screen.getByText("Catálogo: esperando…")).toBeInTheDocument();
 
-    act(() => {
-      window.dispatchEvent(
-        new MessageEvent("message", {
-          data: {
-            type: HOST_TO_WEBVIEW_MESSAGE_TYPES.catalog,
-            skills: [SAMPLE_SKILL],
-            rules: [SAMPLE_RULE],
-          },
-        }),
-      );
+    dispatchHostMessage({
+      type: HOST_TO_WEBVIEW_MESSAGE_TYPES.catalog,
+      skills: [SAMPLE_SKILL],
+      rules: [SAMPLE_RULE],
     });
 
+    expect(screen.getByText("Catálogo: esperando…")).toBeInTheDocument();
+    expect(screen.queryByRole("tab")).not.toBeInTheDocument();
+
+    dispatchSettings();
+
+    const tabs = screen.getAllByRole("tab");
+    expect(tabs[0]).toHaveAccessibleName("Skills");
+    expect(tabs[1]).toHaveAccessibleName("Rules");
     expect(screen.getByRole("tab", { name: "Skills", selected: true })).toBeInTheDocument();
     expect(screen.getByRole("tab", { name: "Rules", selected: false })).toBeInTheDocument();
     expect(screen.getByRole("article", { name: "demo-skill" })).toBeInTheDocument();
@@ -126,24 +133,12 @@ describe("App", () => {
   it("shows the empty state of the selected tab when the catalog is empty", () => {
     render(<App />);
 
-    act(() => {
-      window.dispatchEvent(
-        new MessageEvent("message", {
-          data: { type: HOST_TO_WEBVIEW_MESSAGE_TYPES.ready },
-        }),
-      );
-    });
-
-    act(() => {
-      window.dispatchEvent(
-        new MessageEvent("message", {
-          data: {
-            type: HOST_TO_WEBVIEW_MESSAGE_TYPES.catalog,
-            skills: [],
-            rules: [],
-          },
-        }),
-      );
+    dispatchHostMessage({ type: HOST_TO_WEBVIEW_MESSAGE_TYPES.ready });
+    dispatchSettings();
+    dispatchHostMessage({
+      type: HOST_TO_WEBVIEW_MESSAGE_TYPES.catalog,
+      skills: [],
+      rules: [],
     });
 
     const main = screen.getByRole("main", { name: "SkillDex dashboard" });
@@ -294,7 +289,8 @@ describe("App", () => {
     expect(header).not.toBeNull();
     if (header === null) return;
     expect(header.querySelector("label")).toBeNull();
-    expect(within(header).queryByRole("button")).not.toBeInTheDocument();
+    expect(within(header).getAllByRole("button")).toHaveLength(1);
+    expect(within(header).getByRole("button", { name: "Configuración" })).toBeInTheDocument();
     expect(searchField.previousElementSibling?.tagName).toBe("svg");
     expect(searchField).toHaveClass("pl-9");
   });
@@ -302,58 +298,47 @@ describe("App", () => {
   it("filters skills by visible name or description and keeps the query on the rules tab", () => {
     render(<App />);
 
-    act(() => {
-      window.dispatchEvent(
-        new MessageEvent("message", {
-          data: { type: HOST_TO_WEBVIEW_MESSAGE_TYPES.ready },
-        }),
-      );
-    });
+    dispatchHostMessage({ type: HOST_TO_WEBVIEW_MESSAGE_TYPES.ready });
+    dispatchSettings();
 
-    act(() => {
-      window.dispatchEvent(
-        new MessageEvent("message", {
-          data: {
-            type: HOST_TO_WEBVIEW_MESSAGE_TYPES.catalog,
-            skills: [
-              {
-                ...SAMPLE_SKILL,
-                id: ".cursor/skills/react/SKILL.md",
-                title: "React Conventions",
-                description: "Hooks",
-                category: "stack",
-              },
-              {
-                ...SAMPLE_SKILL,
-                id: ".cursor/skills/acceso/SKILL.md",
-                title: "Otra",
-                description: "Control de acceso",
-                category: "project",
-              },
-              {
-                ...SAMPLE_SKILL,
-                id: ".cursor/skills/sin-desc/SKILL.md",
-                title: "Sin campo",
-                description: undefined,
-              },
-            ],
-            rules: [
-              {
-                ...SAMPLE_RULE,
-                id: ".cursor/rules/ejemplo.mdc",
-                title: "Ejemplo",
-                description: "filtra por globs",
-                globs: ["**/*.ts"],
-              },
-              {
-                ...SAMPLE_RULE,
-                id: ".cursor/rules/otra.mdc",
-                title: "Otra rule",
-              },
-            ],
-          },
-        }),
-      );
+    dispatchHostMessage({
+      type: HOST_TO_WEBVIEW_MESSAGE_TYPES.catalog,
+      skills: [
+        {
+          ...SAMPLE_SKILL,
+          id: ".cursor/skills/react/SKILL.md",
+          title: "React Conventions",
+          description: "Hooks",
+          category: "stack",
+        },
+        {
+          ...SAMPLE_SKILL,
+          id: ".cursor/skills/acceso/SKILL.md",
+          title: "Otra",
+          description: "Control de acceso",
+          category: "project",
+        },
+        {
+          ...SAMPLE_SKILL,
+          id: ".cursor/skills/sin-desc/SKILL.md",
+          title: "Sin campo",
+          description: undefined,
+        },
+      ],
+      rules: [
+        {
+          ...SAMPLE_RULE,
+          id: ".cursor/rules/ejemplo.mdc",
+          title: "Ejemplo",
+          description: "filtra por globs",
+          globs: ["**/*.ts"],
+        },
+        {
+          ...SAMPLE_RULE,
+          id: ".cursor/rules/otra.mdc",
+          title: "Otra rule",
+        },
+      ],
     });
 
     const searchField = screen.getByRole("textbox", { name: "Encuentra algo..." });
@@ -387,24 +372,12 @@ describe("App", () => {
   it("keeps the catalog empty message when a query is active and there are no items", () => {
     render(<App />);
 
-    act(() => {
-      window.dispatchEvent(
-        new MessageEvent("message", {
-          data: { type: HOST_TO_WEBVIEW_MESSAGE_TYPES.ready },
-        }),
-      );
-    });
-
-    act(() => {
-      window.dispatchEvent(
-        new MessageEvent("message", {
-          data: {
-            type: HOST_TO_WEBVIEW_MESSAGE_TYPES.catalog,
-            skills: [],
-            rules: [],
-          },
-        }),
-      );
+    dispatchHostMessage({ type: HOST_TO_WEBVIEW_MESSAGE_TYPES.ready });
+    dispatchSettings();
+    dispatchHostMessage({
+      type: HOST_TO_WEBVIEW_MESSAGE_TYPES.catalog,
+      skills: [],
+      rules: [],
     });
 
     fireEvent.change(screen.getByRole("textbox", { name: "Encuentra algo..." }), {
@@ -413,5 +386,62 @@ describe("App", () => {
 
     expect(screen.getByText("No hay skills todavía")).toBeInTheDocument();
     expect(screen.queryByText("No hemos encontrado nada :(")).not.toBeInTheDocument();
+  });
+
+  it("requests settings from the header button and keeps it when both sections are hidden", () => {
+    render(<App />);
+
+    fireEvent.click(screen.getByRole("button", { name: "Configuración" }));
+    expect(postMessage).toHaveBeenCalledWith({
+      type: WEBVIEW_TO_HOST_MESSAGE_TYPES.openSettings,
+    });
+
+    dispatchHostMessage({ type: HOST_TO_WEBVIEW_MESSAGE_TYPES.ready });
+    dispatchSettings({
+      showSkills: false,
+      showRules: false,
+      remoteSkillsRepositoryUrl: "",
+    });
+
+    expect(screen.getByRole("button", { name: "Configuración" })).toBeInTheDocument();
+  });
+
+  it("shows the raccoon empty state when both sections are hidden", () => {
+    render(<App />);
+    dispatchHostMessage({ type: HOST_TO_WEBVIEW_MESSAGE_TYPES.ready });
+    dispatchSettings({
+      showSkills: false,
+      showRules: false,
+      remoteSkillsRepositoryUrl: "",
+    });
+
+    expect(
+      screen.getByText("No tienes ningún panel seleccionado, así que toma un mapache :D"),
+    ).toBeInTheDocument();
+    expect(screen.getByRole("img", { name: "Mapache" })).toHaveClass("w-40");
+    expect(screen.queryByRole("tab")).not.toBeInTheDocument();
+    expect(screen.queryByText("No hay skills todavía")).not.toBeInTheDocument();
+    expect(screen.queryByText("No hay rules todavía")).not.toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole("button", { name: "Ir a la config" }));
+    expect(postMessage).toHaveBeenCalledWith({
+      type: WEBVIEW_TO_HOST_MESSAGE_TYPES.openSettings,
+    });
+  });
+
+  it("hides Rules when a later snapshot disables that section", () => {
+    render(<App />);
+    connectAndLoadCatalog();
+
+    dispatchSettings({
+      showSkills: true,
+      showRules: false,
+      remoteSkillsRepositoryUrl: "",
+    });
+
+    expect(screen.getByRole("article", { name: "demo-skill" })).toBeInTheDocument();
+    expect(screen.queryByRole("tablist")).not.toBeInTheDocument();
+    expect(screen.queryByRole("article", { name: "example-rule" })).not.toBeInTheDocument();
+    expect(screen.queryByText("No hay rules todavía")).not.toBeInTheDocument();
   });
 });
