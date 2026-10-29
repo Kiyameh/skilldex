@@ -23,11 +23,24 @@ describe("RuleCard", () => {
 
     expect(screen.getByRole("article", { name: "example-rule" })).toBeInTheDocument();
     expect(screen.getByRole("heading", { name: "example-rule" })).toBeInTheDocument();
-    expect(screen.getByLabelText("Secciones")).toHaveTextContent("Overview");
-    expect(screen.getByLabelText("Secciones")).toHaveTextContent("Details");
+    const kindIcon = screen.getByRole("article").querySelector("header svg.text-rose-400");
+    expect(kindIcon).not.toBeNull();
+    expect(kindIcon?.compareDocumentPosition(screen.getByRole("heading"))).toBe(
+      Node.DOCUMENT_POSITION_FOLLOWING,
+    );
+    const sections = screen.getByRole("list", { name: "Secciones" });
+    expect(sections.tagName).toBe("OL");
+    expect(sections).toHaveClass("list-decimal");
+    expect([...sections.querySelectorAll("li")].map((item) => item.textContent)).toEqual([
+      "Overview",
+      "Details",
+    ]);
     expect(screen.queryByText("Rule description")).not.toBeInTheDocument();
     expect(screen.getByLabelText("Globs")).toHaveTextContent("**/*.ts");
-    expect(screen.getByRole("switch", { name: "Auto" })).toHaveAttribute("aria-checked", "true");
+    expect(screen.getByRole("switch", { name: "AlwaysApply" })).toHaveAttribute(
+      "aria-checked",
+      "true",
+    );
     expect(screen.getByRole("button", { name: "Editar" })).toBeInTheDocument();
   });
 
@@ -48,7 +61,10 @@ describe("RuleCard", () => {
 
     expect(screen.getByText("No hay secciones")).toBeInTheDocument();
     expect(screen.getByText("Sin globs")).toBeInTheDocument();
-    expect(screen.getByRole("switch", { name: "Manual" })).toHaveAttribute("aria-checked", "false");
+    expect(screen.getByRole("switch", { name: "NotApply" })).toHaveAttribute(
+      "aria-checked",
+      "false",
+    );
   });
 
   it("treats missing sections like an empty list", () => {
@@ -64,7 +80,7 @@ describe("RuleCard", () => {
     const rule = buildRule({ enabled: false });
     render(<RuleCard item={rule} onToggleEnabled={onToggleEnabled} onOpenItem={vi.fn()} />);
 
-    fireEvent.click(screen.getByRole("switch", { name: "Manual" }));
+    fireEvent.click(screen.getByRole("switch", { name: "NotApply" }));
 
     expect(onToggleEnabled).toHaveBeenCalledWith(rule, true);
   });

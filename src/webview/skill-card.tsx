@@ -2,6 +2,7 @@ import type { CatalogItem } from "../shared/index.js";
 import { EditButton } from "./edit-button";
 import { EnabledToggle } from "./enabled-toggle";
 import { formatSkillInvocationSize } from "./format-skill-invocation-size";
+import { WandIcon } from "./wand-icon";
 
 interface SkillCardProps {
   item: CatalogItem;
@@ -29,11 +30,14 @@ export function SkillCard({
       aria-label={name}
     >
       <header className="flex items-center justify-between gap-2">
-        <div className="flex min-w-0 items-baseline gap-2">
-          <h4 className="m-0 truncate text-sm font-medium">{name}</h4>
-          {version !== undefined ? (
-            <span className="shrink-0 text-xs opacity-70">{version}</span>
-          ) : null}
+        <div className="flex min-w-0 items-center gap-1.5">
+          <WandIcon className="size-3.5 shrink-0 text-teal-400" />
+          <div className="flex min-w-0 items-baseline gap-2">
+            <h4 className="m-0 truncate text-sm font-medium">{name}</h4>
+            {version !== undefined ? (
+              <span className="shrink-0 text-xs opacity-70">{version}</span>
+            ) : null}
+          </div>
         </div>
         <EnabledToggle
           enabled={item.enabled}

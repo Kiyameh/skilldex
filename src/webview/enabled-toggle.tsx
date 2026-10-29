@@ -4,13 +4,21 @@ interface EnabledToggleProps {
   enabled: boolean;
   onToggle: (nextEnabled: boolean) => void;
   disabled?: boolean;
+  enabledLabel?: string;
+  disabledLabel?: string;
 }
 
-const ENABLED_LABEL = "Auto";
-const DISABLED_LABEL = "Manual";
+const DEFAULT_ENABLED_LABEL = "Auto";
+const DEFAULT_DISABLED_LABEL = "Manual";
 
-export function EnabledToggle({ enabled, onToggle, disabled = false }: EnabledToggleProps) {
-  const label = enabled ? ENABLED_LABEL : DISABLED_LABEL;
+export function EnabledToggle({
+  enabled,
+  onToggle,
+  disabled = false,
+  enabledLabel = DEFAULT_ENABLED_LABEL,
+  disabledLabel = DEFAULT_DISABLED_LABEL,
+}: EnabledToggleProps) {
+  const label = enabled ? enabledLabel : disabledLabel;
   const ledColor = enabled ? "bg-emerald-500" : "bg-red-500";
 
   return (
@@ -23,6 +31,7 @@ export function EnabledToggle({ enabled, onToggle, disabled = false }: EnabledTo
       className="inline-flex shrink-0 items-center gap-1.5 rounded text-xs opacity-90 focus-visible:outline focus-visible:outline-offset-2 focus-visible:outline-(--vscode-focusBorder,#007fd4) disabled:cursor-not-allowed disabled:opacity-50"
       onClick={() => onToggle(!enabled)}
     >
+      <span>{label}</span>
       <span
         className="relative inline-flex size-4 shrink-0 items-center justify-center"
         aria-hidden="true"
@@ -34,7 +43,6 @@ export function EnabledToggle({ enabled, onToggle, disabled = false }: EnabledTo
           {enabled ? <ToggleRightIcon /> : <ToggleLeftIcon />}
         </span>
       </span>
-      <span>{label}</span>
     </button>
   );
 }

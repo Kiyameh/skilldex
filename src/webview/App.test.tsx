@@ -66,7 +66,7 @@ describe("App", () => {
     expect(screen.getByRole("status")).toHaveTextContent("desconectado");
   });
 
-  it("shows connected badge after a host ready message", () => {
+  it("shows the actualizado badge after a host ready message", () => {
     render(<App />);
 
     act(() => {
@@ -77,11 +77,11 @@ describe("App", () => {
       );
     });
 
-    expect(screen.getByRole("status")).toHaveTextContent("conectado");
+    expect(screen.getByRole("status")).toHaveTextContent("actualizado");
     expect(postMessage).toHaveBeenCalledWith({ type: WEBVIEW_TO_HOST_MESSAGE_TYPES.ready });
   });
 
-  it("requests the catalog after handshake and renders Skills before Rules", () => {
+  it("requests the catalog after handshake and shows the skills tab by default", () => {
     render(<App />);
 
     act(() => {
@@ -109,19 +109,21 @@ describe("App", () => {
       );
     });
 
-    const skillsHeading = screen.getByRole("heading", { name: "Skills", level: 2 });
-    const rulesHeading = screen.getByRole("heading", { name: "Rules", level: 2 });
-    expect(
-      skillsHeading.compareDocumentPosition(rulesHeading) & Node.DOCUMENT_POSITION_FOLLOWING,
-    ).toBeTruthy();
-
+    expect(screen.getByRole("tab", { name: "Skills", selected: true })).toBeInTheDocument();
+    expect(screen.getByRole("tab", { name: "Rules", selected: false })).toBeInTheDocument();
     expect(screen.getByRole("article", { name: "demo-skill" })).toBeInTheDocument();
-    expect(screen.getByRole("article", { name: "example-rule" })).toBeInTheDocument();
+    expect(screen.queryByRole("article", { name: "example-rule" })).not.toBeInTheDocument();
     expect(screen.queryByLabelText("Catalog dump")).not.toBeInTheDocument();
     expect(screen.queryByText(/skills \/ .* rules/)).not.toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole("tab", { name: "Rules" }));
+
+    expect(screen.getByRole("tab", { name: "Rules", selected: true })).toBeInTheDocument();
+    expect(screen.queryByRole("article", { name: "demo-skill" })).not.toBeInTheDocument();
+    expect(screen.getByRole("article", { name: "example-rule" })).toBeInTheDocument();
   });
 
-  it("shows empty states for both sections when the catalog is empty", () => {
+  it("shows the empty state of the selected tab when the catalog is empty", () => {
     render(<App />);
 
     act(() => {
@@ -146,7 +148,12 @@ describe("App", () => {
 
     const main = screen.getByRole("main", { name: "SkillDex dashboard" });
     expect(within(main).getByText("No hay skills todavía")).toBeInTheDocument();
+    expect(within(main).queryByText("No hay rules todavía")).not.toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole("tab", { name: "Rules" }));
+
     expect(within(main).getByText("No hay rules todavía")).toBeInTheDocument();
+    expect(within(main).queryByText("No hay skills todavía")).not.toBeInTheDocument();
   });
 
   it("does not mark handshake connected on catalog messages alone", () => {
@@ -240,6 +247,8 @@ describe("App", () => {
   it("posts openItem when Editar is clicked on a rule card", () => {
     render(<App />);
     connectAndLoadCatalog();
+
+    fireEvent.click(screen.getByRole("tab", { name: "Rules" }));
 
     const ruleCard = screen.getByRole("article", { name: "example-rule" });
     fireEvent.click(within(ruleCard).getByRole("button", { name: "Editar" }));

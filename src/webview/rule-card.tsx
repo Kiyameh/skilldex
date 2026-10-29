@@ -1,6 +1,7 @@
 import type { CatalogItem } from "../shared/index.js";
 import { EditButton } from "./edit-button";
 import { EnabledToggle } from "./enabled-toggle";
+import { SkullIcon } from "./skull-icon";
 
 interface RuleCardProps {
   item: CatalogItem;
@@ -11,6 +12,8 @@ interface RuleCardProps {
 
 const NO_SECTIONS_LABEL = "No hay secciones";
 const EMPTY_GLOBS_LABEL = "Sin globs";
+const ALWAYS_APPLY_LABEL = "AlwaysApply";
+const NOT_APPLY_LABEL = "NotApply";
 
 export function RuleCard({
   item,
@@ -29,21 +32,29 @@ export function RuleCard({
       className="group rounded border border-(--vscode-sideBarSectionHeader-border,#3c3c3c) px-3 py-2"
       aria-label={title}
     >
-      <header className="flex items-start justify-between gap-2">
-        <h3 className="m-0 text-sm font-medium">{title}</h3>
+      <header className="flex items-center justify-between gap-2">
+        <div className="flex min-w-0 items-center gap-1.5">
+          <SkullIcon className="size-3.5 shrink-0 text-rose-400" />
+          <h3 className="m-0 min-w-0 text-sm font-medium">{title}</h3>
+        </div>
         <EnabledToggle
           enabled={item.enabled}
           disabled={toggleDisabled}
+          enabledLabel={ALWAYS_APPLY_LABEL}
+          disabledLabel={NOT_APPLY_LABEL}
           onToggle={(nextEnabled) => onToggleEnabled(item, nextEnabled)}
         />
       </header>
       <div className="mt-3 flex items-start justify-between gap-3">
         {hasSections ? (
-          <ul className="m-0 min-w-0 flex-1 list-none p-0 text-xs opacity-80" aria-label="Secciones">
+          <ol
+            className="m-0 min-w-0 flex-1 list-decimal pl-5 text-xs opacity-80"
+            aria-label="Secciones"
+          >
             {sections.map((section) => (
               <li key={section}>{section}</li>
             ))}
-          </ul>
+          </ol>
         ) : (
           <p className="m-0 min-w-0 flex-1 text-xs opacity-80">{NO_SECTIONS_LABEL}</p>
         )}

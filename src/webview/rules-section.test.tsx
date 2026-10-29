@@ -24,10 +24,10 @@ const nestedRule: CatalogItem = {
 };
 
 describe("RulesSection", () => {
-  it("renders a Rules heading and rule cards", () => {
+  it("renders rule cards without a section heading", () => {
     render(<RulesSection rules={[sampleRule]} onToggleEnabled={vi.fn()} onOpenItem={vi.fn()} />);
 
-    expect(screen.getByRole("heading", { name: "Rules", level: 2 })).toBeInTheDocument();
+    expect(screen.queryByRole("heading", { name: "Rules" })).not.toBeInTheDocument();
     expect(screen.getByRole("article", { name: "example-rule" })).toBeInTheDocument();
   });
 
@@ -40,8 +40,8 @@ describe("RulesSection", () => {
       />,
     );
 
-    expect(screen.getByRole("heading", { name: "Rules", level: 2 })).toBeInTheDocument();
-    expect(screen.getAllByRole("heading", { level: 2 })).toHaveLength(1);
+    expect(screen.queryByRole("heading", { name: "Rules" })).not.toBeInTheDocument();
+    expect(screen.queryByRole("heading", { level: 2 })).not.toBeInTheDocument();
     expect(screen.queryByRole("heading", { name: "Sin categoría" })).not.toBeInTheDocument();
     expect(screen.queryByRole("heading", { name: "Nested" })).not.toBeInTheDocument();
     expect(screen.getByRole("article", { name: "example-rule" })).toBeInTheDocument();
@@ -51,7 +51,6 @@ describe("RulesSection", () => {
   it("shows an empty state when there are no rules", () => {
     render(<RulesSection rules={[]} onToggleEnabled={vi.fn()} onOpenItem={vi.fn()} />);
 
-    expect(screen.getByRole("heading", { name: "Rules", level: 2 })).toBeInTheDocument();
     expect(screen.getByText("No hay rules todavía")).toBeInTheDocument();
     expect(screen.queryByRole("article")).not.toBeInTheDocument();
   });

@@ -16,8 +16,8 @@ export function EditButton({ onClick }: EditButtonProps) {
       className={`${CONTROL_BUTTON_CLASS} opacity-0 focus-visible:opacity-90 group-hover:opacity-90 group-focus-within:opacity-90`}
       onClick={onClick}
     >
-      <PencilIcon />
       <span>{EDIT_LABEL}</span>
+      <PencilIcon />
     </button>
   );
 }

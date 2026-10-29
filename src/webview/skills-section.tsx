@@ -21,43 +21,35 @@ export function SkillsSection({
   const groups = groupSkillsByCategory(skills);
 
   return (
-    <section aria-labelledby="skills-heading" className="flex min-h-0 flex-2 flex-col">
-      <h2 id="skills-heading" className="m-0 mb-2 shrink-0 text-sm font-semibold tracking-wide">
-        Skills
-      </h2>
-      <div className="min-h-0 flex-1 overflow-y-auto pr-1">
-        {isEmpty ? (
-          <p className="m-0 text-xs opacity-70">{EMPTY_SKILLS_MESSAGE}</p>
-        ) : (
-          <div className="flex flex-col gap-3">
-            {groups.map((group) => {
-              const headingId = `skills-category-${group.id}`;
-              return (
-                <section key={group.id} aria-labelledby={headingId} className="flex flex-col gap-2">
-                  <h3
-                    id={headingId}
-                    className="m-0 text-xs font-semibold tracking-wide opacity-80"
-                  >
-                    {group.label}
-                  </h3>
-                  <ul className="m-0 flex list-none flex-col gap-2 p-0">
-                    {group.skills.map((skill) => (
-                      <li key={skill.id}>
-                        <SkillCard
-                          item={skill}
-                          onToggleEnabled={onToggleEnabled}
-                          onOpenItem={onOpenItem}
-                          toggleDisabled={pendingToggleIds?.has(skill.id) ?? false}
-                        />
-                      </li>
-                    ))}
-                  </ul>
-                </section>
-              );
-            })}
-          </div>
-        )}
-      </div>
-    </section>
+    <div className="min-h-0 flex-1 overflow-y-auto pr-1">
+      {isEmpty ? (
+        <p className="m-0 text-xs opacity-70">{EMPTY_SKILLS_MESSAGE}</p>
+      ) : (
+        <div className="flex flex-col gap-3">
+          {groups.map((group) => {
+            const headingId = `skills-category-${group.id}`;
+            return (
+              <section key={group.id} aria-labelledby={headingId} className="flex flex-col gap-2">
+                <h3 id={headingId} className="m-0 text-xs font-semibold tracking-wide opacity-80">
+                  {group.label}
+                </h3>
+                <ul className="m-0 flex list-none flex-col gap-2 p-0">
+                  {group.skills.map((skill) => (
+                    <li key={skill.id}>
+                      <SkillCard
+                        item={skill}
+                        onToggleEnabled={onToggleEnabled}
+                        onOpenItem={onOpenItem}
+                        toggleDisabled={pendingToggleIds?.has(skill.id) ?? false}
+                      />
+                    </li>
+                  ))}
+                </ul>
+              </section>
+            );
+          })}
+        </div>
+      )}
+    </div>
   );
 }

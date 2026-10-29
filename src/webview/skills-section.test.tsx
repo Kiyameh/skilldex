@@ -17,16 +17,12 @@ function buildSkill(overrides: Partial<CatalogItem> = {}): CatalogItem {
 }
 
 describe("SkillsSection", () => {
-  it("renders a Skills heading and skill cards", () => {
+  it("renders skill cards grouped under a category heading", () => {
     render(
-      <SkillsSection
-        skills={[buildSkill()]}
-        onToggleEnabled={vi.fn()}
-        onOpenItem={vi.fn()}
-      />,
+      <SkillsSection skills={[buildSkill()]} onToggleEnabled={vi.fn()} onOpenItem={vi.fn()} />,
     );
 
-    expect(screen.getByRole("heading", { name: "Skills", level: 2 })).toBeInTheDocument();
+    expect(screen.queryByRole("heading", { name: "Skills" })).not.toBeInTheDocument();
     expect(screen.getByRole("heading", { name: "Sin categoría", level: 3 })).toBeInTheDocument();
     expect(screen.getByRole("article", { name: "demo-skill" })).toBeInTheDocument();
   });
@@ -58,12 +54,14 @@ describe("SkillsSection", () => {
       "Foo Bar",
     ]);
 
-    const uncategorizedSection = screen.getByRole("heading", { name: "Sin categoría" }).closest(
-      "section",
-    );
+    const uncategorizedSection = screen
+      .getByRole("heading", { name: "Sin categoría" })
+      .closest("section");
     expect(uncategorizedSection).not.toBeNull();
     if (uncategorizedSection === null) return;
-    expect(within(uncategorizedSection).getByRole("article", { name: "root-skill" })).toBeInTheDocument();
+    expect(
+      within(uncategorizedSection).getByRole("article", { name: "root-skill" }),
+    ).toBeInTheDocument();
 
     expect(screen.queryByRole("button", { name: /collapse|expand|plegar|desplegar/i })).toBeNull();
     expect(screen.queryByRole("group")).toBeNull();
@@ -72,7 +70,6 @@ describe("SkillsSection", () => {
   it("shows an empty state when there are no skills", () => {
     render(<SkillsSection skills={[]} onToggleEnabled={vi.fn()} onOpenItem={vi.fn()} />);
 
-    expect(screen.getByRole("heading", { name: "Skills", level: 2 })).toBeInTheDocument();
     expect(screen.getByText("No hay skills todavía")).toBeInTheDocument();
     expect(screen.queryByRole("article")).not.toBeInTheDocument();
   });

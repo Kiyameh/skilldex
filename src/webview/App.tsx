@@ -1,7 +1,6 @@
+import { CatalogTabs } from "./catalog-tabs";
 import { ConnectionBadge } from "./connection-badge";
-import { RulesSection } from "./rules-section";
 import { SkillDexLogo } from "./skilldex-logo";
-import { SkillsSection } from "./skills-section";
 import { useCatalog } from "./use-catalog";
 import { useHostHandshake } from "./use-host-handshake";
 
@@ -36,20 +35,13 @@ export function App() {
             {CATALOG_WAITING_LABEL}
           </p>
         ) : (
-          <>
-            <SkillsSection
-              skills={catalog.skills}
-              onToggleEnabled={toggleItemEnabled}
-              onOpenItem={openItem}
-              pendingToggleIds={pendingToggleIds}
-            />
-            <RulesSection
-              rules={catalog.rules}
-              onToggleEnabled={toggleItemEnabled}
-              onOpenItem={openItem}
-              pendingToggleIds={pendingToggleIds}
-            />
-          </>
+          <CatalogTabs
+            skills={catalog.skills}
+            rules={catalog.rules}
+            onToggleEnabled={toggleItemEnabled}
+            onOpenItem={openItem}
+            pendingToggleIds={pendingToggleIds}
+          />
         )}
       </main>
     </div>

@@ -6,7 +6,7 @@ interface ConnectionBadgeProps {
 
 export function ConnectionBadge({ status }: ConnectionBadgeProps) {
   const isConnected = status === "connected";
-  const label = isConnected ? "conectado" : "desconectado";
+  const label = isConnected ? "actualizado" : "desconectado";
   const borderClass = isConnected
     ? "border-emerald-500 text-emerald-500"
     : "border-red-500 text-red-500";

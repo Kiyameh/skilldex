@@ -22,6 +22,11 @@ describe("SkillCard", () => {
 
     expect(screen.getByRole("article", { name: "demo-skill" })).toBeInTheDocument();
     expect(screen.getByRole("heading", { name: "demo-skill" })).toBeInTheDocument();
+    const kindIcon = screen.getByRole("article").querySelector("header svg.text-teal-400");
+    expect(kindIcon).not.toBeNull();
+    expect(kindIcon?.compareDocumentPosition(screen.getByRole("heading"))).toBe(
+      Node.DOCUMENT_POSITION_FOLLOWING,
+    );
     expect(screen.getByRole("switch", { name: "Auto" })).toHaveAttribute("aria-checked", "true");
     expect(screen.getByText("Demo description")).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Editar" })).toBeInTheDocument();
