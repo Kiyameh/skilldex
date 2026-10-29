@@ -18,9 +18,11 @@ const DEFAULT_CATALOG_TAB: CatalogTabId = "skills";
 interface CatalogTabsProps {
   skills: CatalogItem[];
   rules: CatalogItem[];
+  unfilteredSkillsCount: number;
+  unfilteredRulesCount: number;
   onToggleEnabled: (item: CatalogItem, nextEnabled: boolean) => void;
   onOpenItem: (item: CatalogItem) => void;
-  pendingToggleIds?: ReadonlySet<string>;
+  pendingToggleIds?: ReadonlySet<string> | undefined;
 }
 
 function tabDomId(tabId: CatalogTabId): string {
@@ -44,6 +46,8 @@ function nextTabIndex(currentIndex: number, key: string): number | undefined {
 export function CatalogTabs({
   skills,
   rules,
+  unfilteredSkillsCount,
+  unfilteredRulesCount,
   onToggleEnabled,
   onOpenItem,
   pendingToggleIds,
@@ -98,7 +102,7 @@ export function CatalogTabs({
               aria-selected={isSelected}
               aria-controls={panelDomId(tabId)}
               tabIndex={isSelected ? 0 : -1}
-              className={`border-b-2 px-2 py-1.5 text-sm font-medium tracking-wide focus-visible:outline focus-visible:outline-offset-2 focus-visible:outline-(--vscode-focusBorder,#007fd4) ${selectedClassName}`}
+              className={`cursor-pointer border-b-2 px-2 py-1.5 text-sm font-medium tracking-wide focus-visible:outline focus-visible:outline-offset-2 focus-visible:outline-(--vscode-focusBorder,#007fd4) ${selectedClassName}`}
               onClick={() => selectTab(tabId, false)}
             >
               {CATALOG_TAB_LABELS[tabId]}
@@ -115,6 +119,7 @@ export function CatalogTabs({
         {selectedTab === "skills" ? (
           <SkillsSection
             skills={skills}
+            unfilteredCount={unfilteredSkillsCount}
             onToggleEnabled={onToggleEnabled}
             onOpenItem={onOpenItem}
             pendingToggleIds={pendingToggleIds}
@@ -122,6 +127,7 @@ export function CatalogTabs({
         ) : (
           <RulesSection
             rules={rules}
+            unfilteredCount={unfilteredRulesCount}
             onToggleEnabled={onToggleEnabled}
             onOpenItem={onOpenItem}
             pendingToggleIds={pendingToggleIds}
