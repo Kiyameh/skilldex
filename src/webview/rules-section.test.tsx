@@ -25,7 +25,14 @@ const nestedRule: CatalogItem = {
 
 describe("RulesSection", () => {
   it("renders rule cards without a section heading", () => {
-    render(<RulesSection rules={[sampleRule]} onToggleEnabled={vi.fn()} onOpenItem={vi.fn()} />);
+    render(
+      <RulesSection
+        rules={[sampleRule]}
+        unfilteredCount={1}
+        onToggleEnabled={vi.fn()}
+        onOpenItem={vi.fn()}
+      />,
+    );
 
     expect(screen.queryByRole("heading", { name: "Rules" })).not.toBeInTheDocument();
     expect(screen.getByRole("article", { name: "example-rule" })).toBeInTheDocument();
@@ -35,6 +42,7 @@ describe("RulesSection", () => {
     render(
       <RulesSection
         rules={[sampleRule, nestedRule]}
+        unfilteredCount={2}
         onToggleEnabled={vi.fn()}
         onOpenItem={vi.fn()}
       />,
@@ -49,9 +57,30 @@ describe("RulesSection", () => {
   });
 
   it("shows an empty state when there are no rules", () => {
-    render(<RulesSection rules={[]} onToggleEnabled={vi.fn()} onOpenItem={vi.fn()} />);
+    render(
+      <RulesSection
+        rules={[]}
+        unfilteredCount={0}
+        onToggleEnabled={vi.fn()}
+        onOpenItem={vi.fn()}
+      />,
+    );
 
     expect(screen.getByText("No hay rules todavía")).toBeInTheDocument();
     expect(screen.queryByRole("article")).not.toBeInTheDocument();
+  });
+
+  it("shows no matches when the catalog has rules but none remain visible", () => {
+    render(
+      <RulesSection
+        rules={[]}
+        unfilteredCount={1}
+        onToggleEnabled={vi.fn()}
+        onOpenItem={vi.fn()}
+      />,
+    );
+
+    expect(screen.getByText("No hemos encontrado nada :(")).toBeInTheDocument();
+    expect(screen.queryByText("No hay rules todavía")).not.toBeInTheDocument();
   });
 });

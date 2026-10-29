@@ -281,4 +281,137 @@ describe("App", () => {
 
     expect(screen.getByRole("alert")).toHaveTextContent("File not found");
   });
+
+  it("shows a search field without a visible label or submit control", () => {
+    render(<App />);
+    connectAndLoadCatalog();
+
+    const searchField = screen.getByRole("textbox", { name: "Encuentra algo..." });
+    const header = searchField.closest("header");
+
+    expect(searchField).toHaveAttribute("placeholder", "Encuentra algo...");
+    expect(searchField).toHaveAttribute("type", "text");
+    expect(header).not.toBeNull();
+    if (header === null) return;
+    expect(header.querySelector("label")).toBeNull();
+    expect(within(header).queryByRole("button")).not.toBeInTheDocument();
+    expect(searchField.previousElementSibling?.tagName).toBe("svg");
+    expect(searchField).toHaveClass("pl-9");
+  });
+
+  it("filters skills by visible name or description and keeps the query on the rules tab", () => {
+    render(<App />);
+
+    act(() => {
+      window.dispatchEvent(
+        new MessageEvent("message", {
+          data: { type: HOST_TO_WEBVIEW_MESSAGE_TYPES.ready },
+        }),
+      );
+    });
+
+    act(() => {
+      window.dispatchEvent(
+        new MessageEvent("message", {
+          data: {
+            type: HOST_TO_WEBVIEW_MESSAGE_TYPES.catalog,
+            skills: [
+              {
+                ...SAMPLE_SKILL,
+                id: ".cursor/skills/react/SKILL.md",
+                title: "React Conventions",
+                description: "Hooks",
+                category: "stack",
+              },
+              {
+                ...SAMPLE_SKILL,
+                id: ".cursor/skills/acceso/SKILL.md",
+                title: "Otra",
+                description: "Control de acceso",
+                category: "project",
+              },
+              {
+                ...SAMPLE_SKILL,
+                id: ".cursor/skills/sin-desc/SKILL.md",
+                title: "Sin campo",
+                description: undefined,
+              },
+            ],
+            rules: [
+              {
+                ...SAMPLE_RULE,
+                id: ".cursor/rules/ejemplo.mdc",
+                title: "Ejemplo",
+                description: "filtra por globs",
+                globs: ["**/*.ts"],
+              },
+              {
+                ...SAMPLE_RULE,
+                id: ".cursor/rules/otra.mdc",
+                title: "Otra rule",
+              },
+            ],
+          },
+        }),
+      );
+    });
+
+    const searchField = screen.getByRole("textbox", { name: "Encuentra algo..." });
+
+    fireEvent.change(searchField, { target: { value: "react" } });
+    expect(screen.getByRole("article", { name: "React Conventions" })).toBeInTheDocument();
+    expect(screen.queryByRole("article", { name: "Otra" })).not.toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: "Stack" })).toBeInTheDocument();
+    expect(screen.queryByRole("heading", { name: "Project" })).not.toBeInTheDocument();
+
+    fireEvent.change(searchField, { target: { value: "acceso" } });
+    expect(screen.getByRole("article", { name: "Otra" })).toBeInTheDocument();
+    expect(screen.queryByRole("article", { name: "React Conventions" })).not.toBeInTheDocument();
+
+    fireEvent.change(searchField, { target: { value: "descripción" } });
+    expect(screen.getByText("No hemos encontrado nada :(")).toBeInTheDocument();
+    expect(screen.queryByText("No hay skills todavía")).not.toBeInTheDocument();
+
+    fireEvent.change(searchField, { target: { value: "ejemplo" } });
+    fireEvent.click(screen.getByRole("tab", { name: "Rules" }));
+
+    expect(searchField).toHaveValue("ejemplo");
+    expect(screen.getByRole("article", { name: "Ejemplo" })).toBeInTheDocument();
+    expect(screen.queryByRole("article", { name: "Otra rule" })).not.toBeInTheDocument();
+
+    fireEvent.change(searchField, { target: { value: "glob" } });
+    expect(screen.getByText("No hemos encontrado nada :(")).toBeInTheDocument();
+    expect(screen.queryByRole("article", { name: "Ejemplo" })).not.toBeInTheDocument();
+  });
+
+  it("keeps the catalog empty message when a query is active and there are no items", () => {
+    render(<App />);
+
+    act(() => {
+      window.dispatchEvent(
+        new MessageEvent("message", {
+          data: { type: HOST_TO_WEBVIEW_MESSAGE_TYPES.ready },
+        }),
+      );
+    });
+
+    act(() => {
+      window.dispatchEvent(
+        new MessageEvent("message", {
+          data: {
+            type: HOST_TO_WEBVIEW_MESSAGE_TYPES.catalog,
+            skills: [],
+            rules: [],
+          },
+        }),
+      );
+    });
+
+    fireEvent.change(screen.getByRole("textbox", { name: "Encuentra algo..." }), {
+      target: { value: "react" },
+    });
+
+    expect(screen.getByText("No hay skills todavía")).toBeInTheDocument();
+    expect(screen.queryByText("No hemos encontrado nada :(")).not.toBeInTheDocument();
+  });
 });

@@ -28,6 +28,8 @@ function renderTabs() {
     <CatalogTabs
       skills={[sampleSkill]}
       rules={[sampleRule]}
+      unfilteredSkillsCount={1}
+      unfilteredRulesCount={1}
       onToggleEnabled={vi.fn()}
       onOpenItem={vi.fn()}
     />,

@@ -19,7 +19,12 @@ function buildSkill(overrides: Partial<CatalogItem> = {}): CatalogItem {
 describe("SkillsSection", () => {
   it("renders skill cards grouped under a category heading", () => {
     render(
-      <SkillsSection skills={[buildSkill()]} onToggleEnabled={vi.fn()} onOpenItem={vi.fn()} />,
+      <SkillsSection
+        skills={[buildSkill()]}
+        unfilteredCount={1}
+        onToggleEnabled={vi.fn()}
+        onOpenItem={vi.fn()}
+      />,
     );
 
     expect(screen.queryByRole("heading", { name: "Skills" })).not.toBeInTheDocument();
@@ -45,7 +50,14 @@ describe("SkillsSection", () => {
       }),
     ];
 
-    render(<SkillsSection skills={skills} onToggleEnabled={vi.fn()} onOpenItem={vi.fn()} />);
+    render(
+      <SkillsSection
+        skills={skills}
+        unfilteredCount={skills.length}
+        onToggleEnabled={vi.fn()}
+        onOpenItem={vi.fn()}
+      />,
+    );
 
     const categoryHeadings = screen.getAllByRole("heading", { level: 3 });
     expect(categoryHeadings.map((heading) => heading.textContent)).toEqual([
@@ -68,9 +80,52 @@ describe("SkillsSection", () => {
   });
 
   it("shows an empty state when there are no skills", () => {
-    render(<SkillsSection skills={[]} onToggleEnabled={vi.fn()} onOpenItem={vi.fn()} />);
+    render(
+      <SkillsSection
+        skills={[]}
+        unfilteredCount={0}
+        onToggleEnabled={vi.fn()}
+        onOpenItem={vi.fn()}
+      />,
+    );
 
     expect(screen.getByText("No hay skills todavía")).toBeInTheDocument();
     expect(screen.queryByRole("article")).not.toBeInTheDocument();
+  });
+
+  it("shows no matches when the catalog has skills but none remain visible", () => {
+    render(
+      <SkillsSection
+        skills={[]}
+        unfilteredCount={2}
+        onToggleEnabled={vi.fn()}
+        onOpenItem={vi.fn()}
+      />,
+    );
+
+    expect(screen.getByText("No hemos encontrado nada :(")).toBeInTheDocument();
+    expect(screen.queryByText("No hay skills todavía")).not.toBeInTheDocument();
+  });
+
+  it("hides a category heading when that group has no remaining skills", () => {
+    const skills = [
+      buildSkill({
+        id: ".cursor/skills/stack/a/SKILL.md",
+        title: "React Conventions",
+        category: "stack",
+      }),
+    ];
+
+    render(
+      <SkillsSection
+        skills={skills}
+        unfilteredCount={2}
+        onToggleEnabled={vi.fn()}
+        onOpenItem={vi.fn()}
+      />,
+    );
+
+    expect(screen.getByRole("heading", { name: "Stack", level: 3 })).toBeInTheDocument();
+    expect(screen.queryByRole("heading", { name: "Sin categoría" })).not.toBeInTheDocument();
   });
 });
