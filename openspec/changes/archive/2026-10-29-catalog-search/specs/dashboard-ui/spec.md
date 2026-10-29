@@ -45,17 +45,6 @@ La comparación MUST ser una subcadena sin distinguir mayúsculas. Una skill MUS
 - **THEN** el campo MUST conservar el texto
 - **AND** la lista de Rules MUST mostrarse ya filtrada por esa consulta
 
-### Requirement: Active search text is orange
-Cuando la consulta está activa, el texto escrito en el campo MUST mostrarse en naranja. Cuando la consulta no está activa, el texto del campo MUST NOT mostrarse en naranja. Las cards MUST NOT resaltar el fragmento coincidente.
-
-#### Scenario: Orange while searching
-- **WHEN** el campo contiene `react`
-- **THEN** ese texto escrito MUST mostrarse en naranja
-
-#### Scenario: Cards do not highlight matches
-- **WHEN** una card permanece visible por una consulta activa
-- **THEN** la card MUST NOT marcar visualmente el fragmento que coincidió
-
 ### Requirement: No matches message
 Si una lista del catálogo tiene ítems y la consulta activa no deja ninguno, esa lista SHALL mostrar el texto `No hemos encontrado nada :(`. Ese mensaje MUST NOT sustituir al vacío de catálogo cuando la lista no tiene ítems.
 

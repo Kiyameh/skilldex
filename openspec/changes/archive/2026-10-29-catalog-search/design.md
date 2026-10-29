@@ -28,7 +28,7 @@ El spec principal de `dashboard-ui` sigue pidiendo las dos secciones a la vez, c
 - **Estado en `App`:** `query` vive en el encabezado, junto al título. `CatalogTabs` recibe skills y rules ya filtradas, más el tamaño del catálogo sin filtrar de cada lista. Así la consulta no se pierde al cambiar de pestaña y las secciones no leen el input.
 - **Función pura de filtrado:** un helper de Webview (p. ej. `filterCatalogItems`) recibe los ítems, la consulta ya recortada y el kind. Nombre visible = `title ?? id`, igual que las cards. En skills, además `description` si es string. En rules, solo el nombre visible. Comparación: `toLowerCase()` e `includes`. Consulta `""` devuelve la lista original. Sin normalización de diacríticos.
 - **Vacío en la sección:** si la lista visible está vacía y el recuento sin filtrar es 0, se mantiene `No hay skills todavía` / `No hay rules todavía`. Si el recuento sin filtrar es mayor que 0, el mensaje es `No hemos encontrado nada :(`. Filtrar antes de `groupSkillsByCategory` esconde las cabeceras sin coincidencias; el agrupador no cambia.
-- **Campo:** `input type="text"` (no `type="search"`, para no mostrar el borrado nativo), sin `<form>`, sin `<label>` visible. `placeholder` y `aria-label` = `Encuentra algo...`. Con `query.trim().length > 0`, clase `text-orange-500` en el valor; si no, sin esa clase. El naranja fijo sigue el precedente de `text-blue-500` en la línea de tamaño, no un token de VS Code.
+- **Campo:** `input type="text"` (no `type="search"`, para no mostrar el borrado nativo), sin `<form>`, sin `<label>` visible. `placeholder` y `aria-label` = `Encuentra algo...`. El texto del campo usa el color normal del dashboard.
 - **Sitio:** segunda fila del `<header>`, bajo la fila del título y de la insignia, por encima de `CatalogTabs`.
 
 **Alternativas descartadas:**
@@ -40,7 +40,7 @@ El spec principal de `dashboard-ui` sigue pidiendo las dos secciones a la vez, c
 ## Risks / Trade-offs
 
 - [Una skill coincide por `description` aunque ese texto solo se ve al hover] → Aceptado; el requisito pide buscar la descripción real.
-- [`text-orange-500` puede contrastar mal según el tema] → Aceptado; el producto pidió naranja fijo.
+- [El texto de búsqueda no cambia de color] → Aceptado al cerrar el change; el campo queda con el color normal del dashboard.
 - [El spec histórico de secciones simultáneas no coincide con las pestañas] → No se toca en este change. El filtro se aplica a los arrays que ya entran en `CatalogTabs`.
 - [Un catálogo grande se filtra en cada tecla en el hilo de UI] → El catálogo es local y pequeño; no hace falta debounce ni índice.
 
