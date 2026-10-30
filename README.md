@@ -1,8 +1,6 @@
 # SkillDex
 
-
 ![image](./media/screenshot.png)
-
 
 La extensión para Cursor para manejar **Rules** y **Skills** de IA.
 
@@ -22,7 +20,7 @@ Descubre todo el catálogo de herramientas IA y lo muestra en un práctico dashb
    npm run package
    ```
 
-   Se crea `skilldex-1.0.0.vsix` en la carpeta `download`.
+   Se crea `skilldex-1.1.0.vsix` en la carpeta `download`.
 
 2. En Cursor: paleta de comandos (F1)
 3. Escribe `Extensions: Install from VSIX` → selecciona el archivo.
@@ -32,7 +30,7 @@ Para desinstalar: Extensions → SkillDex → Uninstall.
 
 ## Uso
 
-1. Abre un workspace con `.cursor/rules/` y/o `.cursor/skills/`.
+1. Abre un workspace. Por defecto SkillDex mira `.cursor/rules/` y `.cursor/skills/` de la carpeta elegida.
 2. Abre el panel:
    - icono **SkillDex** en la barra lateral, o
    - comando **SkillDex: Abrir SkillDex**.
@@ -59,6 +57,22 @@ version: "1.0.0"
 - Switch de `alwaysApply: true` desde el panel
 - Secciones (titulos h2 del markdown) de cada archivo de rules
 - Globs ❖ Identifica rapidamente sobre que tipo de archivo se está aplicando cada regla
+
+### Carpeta y directorio
+
+- Con varias carpetas abiertas, el título del panel elige cuál se analiza
+- `skilldex.ai-tool-directory` (por defecto `.cursor`) indica el directorio relativo donde buscar rules y skills
+
+### Live
+
+- Bajo la lista de Skills, un feed de las skills que el agente lee o que se adjuntan en el chat
+- Cada fila abre ese `SKILL.md` y muestra la hora de la activación
+- `skilldex.showLiveArea` oculta el feed sin dejar de detectar activaciones
+
+### Búsqueda y visibilidad
+
+- El campo «Encuentra algo...» filtra skills y rules
+- `skilldex.showSkills` y `skilldex.showRules` muestran u ocultan cada sección
 
 ## Desarrollo
 
