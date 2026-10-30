@@ -224,6 +224,45 @@ describe("discoverCatalog", () => {
     expect(catalog.skills).toHaveLength(1);
   });
 
+  it("discovers rules and skills under the configured ai tool directory", async () => {
+    const root = await createTempWorkspace();
+    await mkdir(path.join(root, ".cursor", "skills", "ignored"), { recursive: true });
+    await mkdir(path.join(root, ".agents", "rules"), { recursive: true });
+    await mkdir(path.join(root, ".agents", "skills", "kept"), { recursive: true });
+    await writeFile(
+      path.join(root, ".cursor", "skills", "ignored", "SKILL.md"),
+      ["---", "name: ignored", "---", "body"].join("\n"),
+    );
+    await writeFile(
+      path.join(root, ".agents", "rules", "kept.mdc"),
+      ["---", "title: Kept Rule", "alwaysApply: true", "---", "body"].join("\n"),
+    );
+    await writeFile(
+      path.join(root, ".agents", "skills", "kept", "SKILL.md"),
+      ["---", "name: kept", "---", "body"].join("\n"),
+    );
+
+    const catalog = await discoverCatalog(root, ".agents");
+
+    expect(catalog.skills.map((item) => item.id)).toEqual([".agents/skills/kept/SKILL.md"]);
+    expect(catalog.rules.map((item) => item.id)).toEqual([".agents/rules/kept.mdc"]);
+  });
+
+  it("does not include a skill from a descendant .cursor tree", async () => {
+    const root = await createTempWorkspace();
+    await mkdir(path.join(root, ".cursor", "skills"), { recursive: true });
+    await mkdir(path.join(root, "paquete", ".cursor", "skills", "other"), { recursive: true });
+    await writeFile(
+      path.join(root, "paquete", ".cursor", "skills", "other", "SKILL.md"),
+      ["---", "name: other", "---", "body"].join("\n"),
+    );
+
+    const catalog = await discoverCatalog(root);
+
+    expect(catalog.skills).toEqual([]);
+    expect(catalog.rules).toEqual([]);
+  });
+
   it("returns empty arrays when .cursor trees are missing", async () => {
     const root = await createTempWorkspace();
     await expect(discoverCatalog(root)).resolves.toEqual({ skills: [], rules: [] });

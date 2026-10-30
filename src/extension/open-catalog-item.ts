@@ -1,6 +1,6 @@
 import { access } from "node:fs/promises";
 import * as vscode from "vscode";
-import { resolveCatalogItemPath } from "./catalog-paths.js";
+import { DEFAULT_AI_TOOL_DIRECTORY, resolveCatalogItemPath } from "./catalog-paths.js";
 
 export type OpenCatalogItemSuccess = {
   ok: true;
@@ -22,8 +22,9 @@ function toErrorMessage(error: unknown): string {
 export async function openCatalogItem(
   workspaceRoot: string,
   itemId: string,
+  aiToolDirectory: string = DEFAULT_AI_TOOL_DIRECTORY,
 ): Promise<OpenCatalogItemResult> {
-  const resolved = resolveCatalogItemPath(workspaceRoot, itemId);
+  const resolved = resolveCatalogItemPath(workspaceRoot, itemId, aiToolDirectory);
   if (resolved === undefined)
     return { ok: false, id: itemId, error: `Unknown or invalid catalog item id: ${itemId}` };
 

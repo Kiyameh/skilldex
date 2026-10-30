@@ -53,14 +53,7 @@ describe("mapFrontmatterToCatalogItem", () => {
     });
 
     it("omits version when metadata.version is not a string", () => {
-      const contents = [
-        "---",
-        "name: demo",
-        "metadata:",
-        "  version: 2",
-        "---",
-        "body",
-      ].join("\n");
+      const contents = ["---", "name: demo", "metadata:", "  version: 2", "---", "body"].join("\n");
       const item = mapFrontmatterToCatalogItem(
         path.join(WORKSPACE, ".cursor", "skills", "demo", "SKILL.md"),
         ".cursor/skills/demo/SKILL.md",
@@ -83,6 +76,17 @@ describe("mapFrontmatterToCatalogItem", () => {
           "SKILL.md",
         ),
         ".cursor/skills/stack/react/react-conventions/SKILL.md",
+        "skill",
+        contents,
+      );
+      expect(item.category).toBe("stack");
+    });
+
+    it("maps category when the ai tool directory is not .cursor", () => {
+      const contents = ["---", "name: react-conventions", "---", "body"].join("\n");
+      const item = mapFrontmatterToCatalogItem(
+        path.join(WORKSPACE, ".agents", "skills", "stack", "react", "SKILL.md"),
+        ".agents/skills/stack/react/SKILL.md",
         "skill",
         contents,
       );
@@ -167,14 +171,9 @@ describe("mapFrontmatterToCatalogItem", () => {
         path.join(WORKSPACE, ".cursor", "skills", "a", "SKILL.md"),
         ".cursor/skills/a/SKILL.md",
         "skill",
-        [
-          "---",
-          "name: a",
-          "disable-model-invocation: true",
-          "enabled: true",
-          "---",
-          "body",
-        ].join("\n"),
+        ["---", "name: a", "disable-model-invocation: true", "enabled: true", "---", "body"].join(
+          "\n",
+        ),
       );
       expect(inactive.enabled).toBe(false);
 

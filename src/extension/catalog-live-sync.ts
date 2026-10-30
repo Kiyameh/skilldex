@@ -1,12 +1,9 @@
 import type { Disposable, FileSystemWatcher, Uri, WorkspaceFolder } from "vscode";
 import type { CatalogPayload } from "../shared/index.js";
-import { RULES_DIRECTORY, SKILLS_DIRECTORY } from "./catalog-paths.js";
+import { DEFAULT_AI_TOOL_DIRECTORY, rulesWatchGlob, skillsWatchGlob } from "./catalog-paths.js";
 import { discoverCatalog } from "./discover-catalog.js";
 
 export const CATALOG_LIVE_SYNC_DEBOUNCE_MS = 250;
-
-export const RULES_WATCH_GLOB = `${RULES_DIRECTORY.split(/[/\\]/).join("/")}/**`;
-export const SKILLS_WATCH_GLOB = `${SKILLS_DIRECTORY.split(/[/\\]/).join("/")}/**`;
 
 export type CatalogSink = (catalog: CatalogPayload) => void;
 
@@ -17,6 +14,7 @@ export type DiscoverCatalogFn = (workspaceRoot: string) => Promise<CatalogPayloa
 export interface CatalogLiveSyncOptions {
   getWorkspaceFolder: () => WorkspaceFolder | undefined;
   createFileSystemWatcher: CreateFileSystemWatcher;
+  getAiToolDirectory?: () => string;
   discoverCatalog?: DiscoverCatalogFn;
   debounceMs?: number;
 }
@@ -24,10 +22,14 @@ export interface CatalogLiveSyncOptions {
 export interface CatalogLiveSync extends Disposable {
   setCatalogSink: (sink: CatalogSink) => void;
   clearCatalogSink: () => void;
+  reattach: () => void;
 }
 
 export function startCatalogLiveSync(options: CatalogLiveSyncOptions): CatalogLiveSync {
-  const runDiscovery = options.discoverCatalog ?? discoverCatalog;
+  const aiToolDirectory = (): string => options.getAiToolDirectory?.() ?? DEFAULT_AI_TOOL_DIRECTORY;
+  const runDiscovery =
+    options.discoverCatalog ??
+    ((workspaceRoot: string) => discoverCatalog(workspaceRoot, aiToolDirectory()));
   const debounceMs = options.debounceMs ?? CATALOG_LIVE_SYNC_DEBOUNCE_MS;
 
   const watchers: FileSystemWatcher[] = [];
@@ -37,19 +39,31 @@ export function startCatalogLiveSync(options: CatalogLiveSyncOptions): CatalogLi
   let refreshGeneration = 0;
   let disposed = false;
 
-  const workspaceFolder = options.getWorkspaceFolder();
-  if (workspaceFolder !== undefined) {
+  function detachWatchers(): void {
+    for (const subscription of eventSubscriptions) subscription.dispose();
+    eventSubscriptions.length = 0;
+
+    for (const watcher of watchers) watcher.dispose();
+    watchers.length = 0;
+  }
+
+  function attachWatchers(): void {
+    const workspaceFolder = options.getWorkspaceFolder();
+    if (workspaceFolder === undefined) return;
+
+    const directory = aiToolDirectory();
     const rulesWatcher = options.createFileSystemWatcher(
       workspaceFolder.uri,
-      RULES_WATCH_GLOB,
+      rulesWatchGlob(directory),
     );
     const skillsWatcher = options.createFileSystemWatcher(
       workspaceFolder.uri,
-      SKILLS_WATCH_GLOB,
+      skillsWatchGlob(directory),
     );
-    watchers.push(rulesWatcher, skillsWatcher);
+    const attached = [rulesWatcher, skillsWatcher];
+    watchers.push(...attached);
 
-    for (const watcher of watchers) {
+    for (const watcher of attached) {
       eventSubscriptions.push(
         watcher.onDidCreate(() => scheduleRefresh()),
         watcher.onDidChange(() => scheduleRefresh()),
@@ -57,6 +71,29 @@ export function startCatalogLiveSync(options: CatalogLiveSyncOptions): CatalogLi
       );
     }
   }
+
+  function invalidateInFlightRefresh(): void {
+    if (debounceTimer !== undefined) {
+      clearTimeout(debounceTimer);
+      debounceTimer = undefined;
+    }
+    refreshGeneration += 1;
+  }
+
+  async function publishSelectedCatalog(): Promise<void> {
+    if (disposed) return;
+
+    const folder = options.getWorkspaceFolder();
+    if (folder === undefined) return;
+
+    const generation = ++refreshGeneration;
+    const catalog = await runDiscovery(folder.uri.fsPath);
+    if (disposed || generation !== refreshGeneration) return;
+
+    catalogSink?.(catalog);
+  }
+
+  attachWatchers();
 
   function scheduleRefresh(): void {
     if (disposed) return;
@@ -91,6 +128,13 @@ export function startCatalogLiveSync(options: CatalogLiveSyncOptions): CatalogLi
     clearCatalogSink: () => {
       catalogSink = undefined;
     },
+    reattach: () => {
+      if (disposed) return;
+      invalidateInFlightRefresh();
+      detachWatchers();
+      attachWatchers();
+      void publishSelectedCatalog();
+    },
     dispose: () => {
       if (disposed) return;
       disposed = true;
@@ -102,12 +146,7 @@ export function startCatalogLiveSync(options: CatalogLiveSyncOptions): CatalogLi
 
       refreshGeneration += 1;
       catalogSink = undefined;
-
-      for (const subscription of eventSubscriptions) subscription.dispose();
-      eventSubscriptions.length = 0;
-
-      for (const watcher of watchers) watcher.dispose();
-      watchers.length = 0;
+      detachWatchers();
     },
   };
 }

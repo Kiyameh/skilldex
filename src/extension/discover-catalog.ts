@@ -2,10 +2,11 @@ import { readdir, readFile } from "node:fs/promises";
 import path from "node:path";
 import type { CatalogItem, CatalogPayload } from "../shared/index.js";
 import {
-  RULES_DIRECTORY,
-  SKILLS_DIRECTORY,
+  DEFAULT_AI_TOOL_DIRECTORY,
   isRuleFile,
   isSkillFile,
+  rulesDirectory,
+  skillsDirectory,
   toPosixRelativeId,
 } from "./catalog-paths.js";
 import { mapFrontmatterToCatalogItem } from "./map-frontmatter.js";
@@ -56,8 +57,11 @@ async function mapFileToCatalogItem(
   }
 }
 
-async function discoverRules(workspaceRoot: string): Promise<CatalogItem[]> {
-  const rulesRoot = path.join(workspaceRoot, RULES_DIRECTORY);
+async function discoverRules(
+  workspaceRoot: string,
+  aiToolDirectory: string,
+): Promise<CatalogItem[]> {
+  const rulesRoot = path.join(workspaceRoot, rulesDirectory(aiToolDirectory));
   const files = await collectFilesRecursively(rulesRoot);
   const items = await Promise.all(
     files
@@ -67,8 +71,11 @@ async function discoverRules(workspaceRoot: string): Promise<CatalogItem[]> {
   return items.filter((item): item is CatalogItem => item !== undefined);
 }
 
-async function discoverSkills(workspaceRoot: string): Promise<CatalogItem[]> {
-  const skillsRoot = path.join(workspaceRoot, SKILLS_DIRECTORY);
+async function discoverSkills(
+  workspaceRoot: string,
+  aiToolDirectory: string,
+): Promise<CatalogItem[]> {
+  const skillsRoot = path.join(workspaceRoot, skillsDirectory(aiToolDirectory));
   const files = await collectFilesRecursively(skillsRoot);
   const items = await Promise.all(
     files
@@ -78,10 +85,13 @@ async function discoverSkills(workspaceRoot: string): Promise<CatalogItem[]> {
   return items.filter((item): item is CatalogItem => item !== undefined);
 }
 
-export async function discoverCatalog(workspaceRoot: string): Promise<CatalogPayload> {
+export async function discoverCatalog(
+  workspaceRoot: string,
+  aiToolDirectory: string = DEFAULT_AI_TOOL_DIRECTORY,
+): Promise<CatalogPayload> {
   const [rules, skills] = await Promise.all([
-    discoverRules(workspaceRoot),
-    discoverSkills(workspaceRoot),
+    discoverRules(workspaceRoot, aiToolDirectory),
+    discoverSkills(workspaceRoot, aiToolDirectory),
   ]);
 
   return { skills, rules };

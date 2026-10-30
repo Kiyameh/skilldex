@@ -1,7 +1,7 @@
 import { readFile, writeFile } from "node:fs/promises";
 import matter from "gray-matter";
 import type { CatalogItem } from "../shared/index.js";
-import { resolveCatalogItemPath } from "./catalog-paths.js";
+import { DEFAULT_AI_TOOL_DIRECTORY, resolveCatalogItemPath } from "./catalog-paths.js";
 import {
   ALWAYS_APPLY_KEY,
   DISABLE_MODEL_INVOCATION_KEY,
@@ -37,8 +37,9 @@ export async function setItemEnabled(
   workspaceRoot: string,
   itemId: string,
   enabled: boolean,
+  aiToolDirectory: string = DEFAULT_AI_TOOL_DIRECTORY,
 ): Promise<SetItemEnabledResult> {
-  const resolved = resolveCatalogItemPath(workspaceRoot, itemId);
+  const resolved = resolveCatalogItemPath(workspaceRoot, itemId, aiToolDirectory);
   if (resolved === undefined)
     return { ok: false, error: `Unknown or invalid catalog item id: ${itemId}` };
 

@@ -7,8 +7,6 @@ import { extractRuleSections } from "./extract-rule-sections.js";
 export const ALWAYS_APPLY_KEY = "alwaysApply";
 export const DISABLE_MODEL_INVOCATION_KEY = "disable-model-invocation";
 
-const SKILLS_ID_PREFIX = ".cursor/skills/";
-
 function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === "object" && value !== null && !Array.isArray(value);
 }
@@ -40,11 +38,14 @@ function mapSkillVersion(data: Record<string, unknown>): string | undefined {
 }
 
 function mapSkillCategory(relativeId: string): string | undefined {
-  if (!relativeId.startsWith(SKILLS_ID_PREFIX)) return undefined;
-  const underSkills = relativeId.slice(SKILLS_ID_PREFIX.length);
-  const segments = underSkills.split("/").filter((segment) => segment.length > 0);
-  if (segments.length < 2) return undefined;
-  const folderSegments = segments.slice(0, -1);
+  const segments = relativeId.split("/").filter((segment) => segment.length > 0);
+  const skillsIndex = segments.indexOf("skills");
+  if (skillsIndex < 0) return undefined;
+
+  const underSkills = segments.slice(skillsIndex + 1);
+  if (underSkills.length < 2) return undefined;
+
+  const folderSegments = underSkills.slice(0, -1);
   if (folderSegments.length < 2) return undefined;
   return folderSegments[0];
 }

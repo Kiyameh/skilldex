@@ -109,6 +109,29 @@ describe("startCatalogLiveSync", () => {
     expect(fakeWatchers.every((entry) => entry.disposed)).toBe(true);
   });
 
+  it("watches the configured directory and follows it when reattaching", () => {
+    const createFileSystemWatcher = vi.fn<CreateFileSystemWatcher>(
+      () => createFakeWatcher().watcher,
+    );
+    let directory = ".cursor";
+    const sync = startCatalogLiveSync({
+      getWorkspaceFolder: () => createWorkspaceFolder(),
+      createFileSystemWatcher,
+      getAiToolDirectory: () => directory,
+      discoverCatalog: vi.fn().mockResolvedValue(EMPTY_CATALOG),
+    });
+
+    expect(createFileSystemWatcher.mock.calls[0]?.[1]).toBe(".cursor/rules/**");
+    expect(createFileSystemWatcher.mock.calls[1]?.[1]).toBe(".cursor/skills/**");
+
+    directory = ".agents";
+    sync.reattach();
+
+    expect(createFileSystemWatcher.mock.calls[2]?.[1]).toBe(".agents/rules/**");
+    expect(createFileSystemWatcher.mock.calls[3]?.[1]).toBe(".agents/skills/**");
+    sync.dispose();
+  });
+
   it("coalesces burst events into a single discovery after debounce", async () => {
     vi.useFakeTimers();
     const fakeWatchers: FakeWatcher[] = [];
@@ -262,6 +285,76 @@ describe("startCatalogLiveSync", () => {
     await Promise.resolve();
     expect(sink).toHaveBeenCalledTimes(1);
     expect(sink).not.toHaveBeenCalledWith(firstCatalog);
+
+    sync.dispose();
+  });
+
+  it("reattaches to the folder the getter returns and drops an in-flight discovery", async () => {
+    vi.useFakeTimers();
+    const fakeWatchers: FakeWatcher[] = [];
+    const createFileSystemWatcher: CreateFileSystemWatcher = () => {
+      const fake = createFakeWatcher();
+      fakeWatchers.push(fake);
+      return fake.watcher;
+    };
+
+    let folder = createWorkspaceFolder("/tmp/folder-a");
+    let resolveStale: ((catalog: CatalogPayload) => void) | undefined;
+    const staleCatalog: CatalogPayload = {
+      skills: [],
+      rules: [{ id: "stale", kind: "rule", path: "/tmp/folder-a/old.mdc", enabled: true }],
+    };
+    const freshCatalog: CatalogPayload = {
+      skills: [],
+      rules: [{ id: "fresh", kind: "rule", path: "/tmp/folder-b/new.mdc", enabled: true }],
+    };
+    const discoverCatalog = vi
+      .fn()
+      .mockImplementationOnce(
+        () =>
+          new Promise<CatalogPayload>((resolve) => {
+            resolveStale = resolve;
+          }),
+      )
+      .mockResolvedValue(freshCatalog);
+    const sink = vi.fn();
+
+    const sync = startCatalogLiveSync({
+      getWorkspaceFolder: () => folder,
+      createFileSystemWatcher,
+      discoverCatalog,
+      debounceMs: CATALOG_LIVE_SYNC_DEBOUNCE_MS,
+    });
+    sync.setCatalogSink(sink);
+
+    fakeWatchers[0]?.emitChange();
+    await vi.advanceTimersByTimeAsync(CATALOG_LIVE_SYNC_DEBOUNCE_MS);
+    expect(discoverCatalog).toHaveBeenCalledTimes(1);
+    expect(discoverCatalog).toHaveBeenCalledWith("/tmp/folder-a");
+
+    const previousWatchers = fakeWatchers.slice(0, 2);
+    folder = createWorkspaceFolder("/tmp/folder-b");
+    sync.reattach();
+
+    expect(previousWatchers.every((entry) => entry.disposed)).toBe(true);
+    expect(fakeWatchers).toHaveLength(4);
+
+    resolveStale?.(staleCatalog);
+    await Promise.resolve();
+    expect(sink).not.toHaveBeenCalledWith(staleCatalog);
+
+    await vi.waitFor(() => {
+      expect(sink).toHaveBeenCalledWith(freshCatalog);
+    });
+    expect(discoverCatalog).toHaveBeenCalledWith("/tmp/folder-b");
+
+    const callsBeforeLaterChange = discoverCatalog.mock.calls.length;
+    fakeWatchers[2]?.emitChange();
+    await vi.advanceTimersByTimeAsync(CATALOG_LIVE_SYNC_DEBOUNCE_MS);
+    await vi.waitFor(() => {
+      expect(discoverCatalog.mock.calls.length).toBeGreaterThan(callsBeforeLaterChange);
+    });
+    expect(discoverCatalog).toHaveBeenLastCalledWith("/tmp/folder-b");
 
     sync.dispose();
   });
