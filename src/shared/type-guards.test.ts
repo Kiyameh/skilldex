@@ -69,25 +69,25 @@ describe("isHostToWebviewMessage", () => {
     ).toBe(true);
   });
 
-  it("accepts a settings snapshot with the three typed fields", () => {
+  it("accepts a settings snapshot with the typed visibility fields", () => {
     expect(
       isHostToWebviewMessage({
         type: HOST_TO_WEBVIEW_MESSAGE_TYPES.settings,
         showSkills: true,
         showRules: false,
-        remoteSkillsRepositoryUrl: "https://example.com/skills",
+        showLiveArea: true,
       }),
     ).toBe(true);
   });
 
-  it("rejects a boolean payload or a settings URL that is not a string", () => {
+  it("rejects a boolean payload or a settings visibility value that is not a boolean", () => {
     expect(isHostToWebviewMessage(true)).toBe(false);
     expect(
       isHostToWebviewMessage({
         type: HOST_TO_WEBVIEW_MESSAGE_TYPES.settings,
         showSkills: "yes",
         showRules: true,
-        remoteSkillsRepositoryUrl: "",
+        showLiveArea: true,
       }),
     ).toBe(false);
     expect(
@@ -95,15 +95,30 @@ describe("isHostToWebviewMessage", () => {
         type: HOST_TO_WEBVIEW_MESSAGE_TYPES.settings,
         showSkills: true,
         showRules: true,
-        remoteSkillsRepositoryUrl: true,
+        showLiveArea: "yes",
       }),
     ).toBe(false);
+  });
+
+  it("accepts a workspace folder snapshot with two folders and a null selection", () => {
     expect(
       isHostToWebviewMessage({
-        type: HOST_TO_WEBVIEW_MESSAGE_TYPES.settings,
-        showSkills: true,
-        showRules: true,
-        remoteSkillsRepositoryUrl: 12,
+        type: HOST_TO_WEBVIEW_MESSAGE_TYPES.workspaceFolders,
+        folders: [
+          { id: "file:///tmp/alpha", name: "alpha", path: "/tmp/alpha" },
+          { id: "file:///tmp/beta", name: "beta", path: "/tmp/beta" },
+        ],
+        selectedId: null,
+      }),
+    ).toBe(true);
+  });
+
+  it("rejects a workspace folder snapshot whose folders value is not an array", () => {
+    expect(
+      isHostToWebviewMessage({
+        type: HOST_TO_WEBVIEW_MESSAGE_TYPES.workspaceFolders,
+        folders: { id: "file:///tmp/alpha", name: "alpha", path: "/tmp/alpha" },
+        selectedId: null,
       }),
     ).toBe(false);
   });
@@ -152,6 +167,12 @@ describe("isWebviewToHostMessage", () => {
       }),
     ).toBe(true);
     expect(isWebviewToHostMessage({ type: WEBVIEW_TO_HOST_MESSAGE_TYPES.openSettings })).toBe(true);
+    expect(
+      isWebviewToHostMessage({
+        type: WEBVIEW_TO_HOST_MESSAGE_TYPES.selectWorkspaceFolder,
+        id: "file:///tmp/alpha",
+      }),
+    ).toBe(true);
   });
 
   it("rejects payloads that are not webview-to-host messages", () => {
@@ -168,6 +189,147 @@ describe("isWebviewToHostMessage", () => {
     expect(
       isWebviewToHostMessage({
         type: WEBVIEW_TO_HOST_MESSAGE_TYPES.openItem,
+      }),
+    ).toBe(false);
+    expect(
+      isWebviewToHostMessage({
+        type: WEBVIEW_TO_HOST_MESSAGE_TYPES.selectWorkspaceFolder,
+      }),
+    ).toBe(false);
+    expect(
+      isWebviewToHostMessage({
+        type: WEBVIEW_TO_HOST_MESSAGE_TYPES.selectWorkspaceFolder,
+        id: 12,
+      }),
+    ).toBe(false);
+  });
+});
+
+describe("live feed messages", () => {
+  it("accepts a live feed snapshot ordered newest first", () => {
+    expect(
+      isHostToWebviewMessage({
+        type: HOST_TO_WEBVIEW_MESSAGE_TYPES.liveFeed,
+        watching: true,
+        chips: [
+          {
+            id: "activation-2",
+            name: "maquetado",
+            workspaceName: "repo",
+            activatedAt: "2026-10-30T10:08:00.000Z",
+          },
+          {
+            id: "activation-1",
+            name: "maquetado",
+            workspaceName: "repo",
+            activatedAt: "2026-10-30T10:07:00.000Z",
+          },
+        ],
+      }),
+    ).toBe(true);
+    expect(
+      isHostToWebviewMessage({
+        type: HOST_TO_WEBVIEW_MESSAGE_TYPES.liveFeed,
+        watching: false,
+        chips: [],
+      }),
+    ).toBe(true);
+  });
+
+  it("rejects a live feed snapshot with an untyped field", () => {
+    expect(
+      isHostToWebviewMessage({
+        type: HOST_TO_WEBVIEW_MESSAGE_TYPES.liveFeed,
+        watching: "yes",
+        chips: [],
+      }),
+    ).toBe(false);
+    expect(
+      isHostToWebviewMessage({
+        type: HOST_TO_WEBVIEW_MESSAGE_TYPES.liveFeed,
+        watching: true,
+        chips: [{ id: "activation-1", name: "maquetado" }],
+      }),
+    ).toBe(false);
+    expect(
+      isHostToWebviewMessage({
+        type: HOST_TO_WEBVIEW_MESSAGE_TYPES.liveFeed,
+        watching: true,
+        chips: [{ id: "activation-1", name: "maquetado", workspaceName: "repo" }],
+      }),
+    ).toBe(false);
+    expect(
+      isHostToWebviewMessage({
+        type: HOST_TO_WEBVIEW_MESSAGE_TYPES.liveFeed,
+        watching: true,
+        chips: [
+          {
+            id: "activation-1",
+            name: "maquetado",
+            workspaceName: "repo",
+            activatedAt: "ayer",
+          },
+        ],
+      }),
+    ).toBe(false);
+    expect(
+      isHostToWebviewMessage({
+        type: HOST_TO_WEBVIEW_MESSAGE_TYPES.liveFeed,
+        watching: true,
+        chips: [{ id: "activation-1" }],
+      }),
+    ).toBe(false);
+    expect(
+      isHostToWebviewMessage({
+        type: HOST_TO_WEBVIEW_MESSAGE_TYPES.liveFeed,
+        watching: true,
+        chips: { id: "activation-1", name: "maquetado" },
+      }),
+    ).toBe(false);
+  });
+
+  it("accepts the watching request and the reset request", () => {
+    expect(
+      isWebviewToHostMessage({
+        type: WEBVIEW_TO_HOST_MESSAGE_TYPES.setLiveWatching,
+        watching: false,
+      }),
+    ).toBe(true);
+    expect(isWebviewToHostMessage({ type: WEBVIEW_TO_HOST_MESSAGE_TYPES.resetLiveFeed })).toBe(
+      true,
+    );
+    expect(
+      isWebviewToHostMessage({
+        type: WEBVIEW_TO_HOST_MESSAGE_TYPES.openLiveActivation,
+        id: "activation-1",
+      }),
+    ).toBe(true);
+  });
+
+  it("rejects a reset payload and chips inside control messages", () => {
+    expect(
+      isWebviewToHostMessage({
+        type: WEBVIEW_TO_HOST_MESSAGE_TYPES.resetLiveFeed,
+        watching: true,
+      }),
+    ).toBe(false);
+    expect(
+      isWebviewToHostMessage({
+        type: WEBVIEW_TO_HOST_MESSAGE_TYPES.resetLiveFeed,
+        chips: [],
+      }),
+    ).toBe(false);
+    expect(
+      isWebviewToHostMessage({
+        type: WEBVIEW_TO_HOST_MESSAGE_TYPES.setLiveWatching,
+        watching: true,
+        chips: [{ id: "activation-1", name: "maquetado" }],
+      }),
+    ).toBe(false);
+    expect(
+      isWebviewToHostMessage({
+        type: WEBVIEW_TO_HOST_MESSAGE_TYPES.setLiveWatching,
+        watching: "no",
       }),
     ).toBe(false);
   });

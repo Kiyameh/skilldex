@@ -31,6 +31,7 @@ function renderTabs(
     unfilteredRulesCount: number;
     showSkills: boolean;
     showRules: boolean;
+    showLiveArea: boolean;
   }> = {},
 ) {
   render(
@@ -41,10 +42,29 @@ function renderTabs(
       unfilteredRulesCount={overrides.unfilteredRulesCount ?? 1}
       showSkills={overrides.showSkills ?? true}
       showRules={overrides.showRules ?? true}
+      showLiveArea={overrides.showLiveArea ?? true}
       onToggleEnabled={vi.fn()}
       onOpenItem={vi.fn()}
+      onOpenLiveActivation={vi.fn()}
+      liveFeed={{
+        watching: true,
+        chips: [
+          {
+            id: "activation-1",
+            name: "maquetado",
+            workspaceName: "repo",
+            activatedAt: "2026-10-30T10:08:00.000Z",
+          },
+        ],
+        toggleWatching: vi.fn(),
+        reset: vi.fn(),
+      }}
     />,
   );
+}
+
+function liveRegion(): HTMLElement | null {
+  return screen.queryByRole("region", { name: "Live" });
 }
 
 describe("CatalogTabs", () => {
@@ -110,5 +130,49 @@ describe("CatalogTabs", () => {
     expect(screen.queryByRole("tablist")).not.toBeInTheDocument();
     expect(screen.getByText("No hay rules todavía")).toBeInTheDocument();
     expect(screen.queryByText("No hay skills todavía")).not.toBeInTheDocument();
+  });
+
+  it("places Live under the scrollable skills list inside the same skills panel", () => {
+    renderTabs();
+
+    const panel = screen.getByRole("tabpanel", { name: "Skills" });
+    const live = liveRegion();
+    expect(live).not.toBeNull();
+    expect(panel).toContainElement(live);
+    const scrollableList = screen
+      .getByRole("article", { name: "demo-skill" })
+      .closest(".overflow-y-auto");
+    expect(scrollableList).not.toBeNull();
+    expect(scrollableList).not.toContainElement(live);
+    expect(scrollableList?.nextElementSibling).toBe(live);
+    expect(live).toHaveClass("shrink-0");
+  });
+
+  it("keeps Live with the skills list when only skills are shown", () => {
+    renderTabs({ showSkills: true, showRules: false });
+
+    expect(liveRegion()).toBeInTheDocument();
+  });
+
+  it("hides Live on the rules tab and when skills are hidden", () => {
+    renderTabs();
+    fireEvent.click(screen.getByRole("tab", { name: "Rules" }));
+    expect(liveRegion()).not.toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole("tab", { name: "Skills" }));
+    expect(liveRegion()).toBeInTheDocument();
+  });
+
+  it("hides Live when the show live area preference is off", () => {
+    renderTabs({ showLiveArea: false });
+
+    expect(liveRegion()).not.toBeInTheDocument();
+    expect(screen.getByRole("article", { name: "demo-skill" })).toBeInTheDocument();
+  });
+
+  it("does not render Live when only rules are shown", () => {
+    renderTabs({ showSkills: false, showRules: true });
+
+    expect(liveRegion()).not.toBeInTheDocument();
   });
 });

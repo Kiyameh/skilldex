@@ -72,12 +72,19 @@
           "order": 2,
           "description": "Muestra la sección de Rules en el panel de SkillDex."
         },
-        "skilldex.remoteSkillsRepositoryUrl": {
-          "type": "string",
-          "default": "",
-          "scope": "window",
+        "skilldex.showLiveArea": {
+          "type": "boolean",
+          "default": true,
+          "scope": "application",
           "order": 3,
-          "description": "URL del repositorio remoto de skills. SkillDex la guarda y todavía no la usa."
+          "description": "Muestra el área Live en el panel de Skills de SkillDex."
+        },
+        "skilldex.ai-tool-directory": {
+          "type": "string",
+          "default": ".cursor",
+          "scope": "window",
+          "order": 4,
+          "description": "Directorio, relativo a la carpeta del workspace, donde SkillDex busca rules y skills. Por defecto, .cursor."
         }
       }
     }
@@ -106,6 +113,7 @@
   },
   "devDependencies": {
     "@eslint/js": "^9.37.0",
+    "@github/relative-time-element": "^5.3.1",
     "@tailwindcss/vite": "^4.1.13",
     "@testing-library/jest-dom": "^7.0.1",
     "@testing-library/react": "^16.3.3",

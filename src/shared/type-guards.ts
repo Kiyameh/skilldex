@@ -3,13 +3,21 @@ import {
   HOST_TO_WEBVIEW_MESSAGE_TYPES,
   WEBVIEW_TO_HOST_MESSAGE_TYPES,
   type HostCatalogMessage,
+  type HostLiveFeedMessage,
   type HostOpenResultMessage,
   type HostSettingsMessage,
   type HostToggleResultMessage,
   type HostToWebviewMessage,
+  type HostWorkspaceFoldersMessage,
+  type LiveFeedChip,
   type WebviewOpenItemMessage,
+  type WebviewOpenLiveActivationMessage,
+  type WebviewResetLiveFeedMessage,
+  type WebviewSelectWorkspaceFolderMessage,
+  type WebviewSetLiveWatchingMessage,
   type WebviewToHostMessage,
   type WebviewToggleEnabledMessage,
+  type WorkspaceFolderSnapshotEntry,
 } from "./messages.js";
 
 function isRecord(value: unknown): value is Record<string, unknown> {
@@ -91,12 +99,91 @@ function isWebviewOpenItemMessage(value: Record<string, unknown>): value is Webv
   );
 }
 
+function isWorkspaceFolderSnapshotEntry(value: unknown): value is WorkspaceFolderSnapshotEntry {
+  if (!isRecord(value)) return false;
+  return (
+    typeof value["id"] === "string" &&
+    typeof value["name"] === "string" &&
+    typeof value["path"] === "string"
+  );
+}
+
+function isHostWorkspaceFoldersMessage(
+  value: Record<string, unknown>,
+): value is HostWorkspaceFoldersMessage {
+  if (value["type"] !== HOST_TO_WEBVIEW_MESSAGE_TYPES.workspaceFolders) return false;
+  if (!Array.isArray(value["folders"]) || !value["folders"].every(isWorkspaceFolderSnapshotEntry))
+    return false;
+  return typeof value["selectedId"] === "string" || value["selectedId"] === null;
+}
+
+function isWebviewSelectWorkspaceFolderMessage(
+  value: Record<string, unknown>,
+): value is WebviewSelectWorkspaceFolderMessage {
+  return (
+    value["type"] === WEBVIEW_TO_HOST_MESSAGE_TYPES.selectWorkspaceFolder &&
+    typeof value["id"] === "string"
+  );
+}
+
 function isHostSettingsMessage(value: Record<string, unknown>): value is HostSettingsMessage {
   return (
     value["type"] === HOST_TO_WEBVIEW_MESSAGE_TYPES.settings &&
     typeof value["showSkills"] === "boolean" &&
     typeof value["showRules"] === "boolean" &&
-    typeof value["remoteSkillsRepositoryUrl"] === "string"
+    typeof value["showLiveArea"] === "boolean"
+  );
+}
+
+function isActivatedAt(value: unknown): value is string {
+  return typeof value === "string" && !Number.isNaN(Date.parse(value));
+}
+
+function isLiveFeedChip(value: unknown): value is LiveFeedChip {
+  if (!isRecord(value)) return false;
+  return (
+    typeof value["id"] === "string" &&
+    typeof value["name"] === "string" &&
+    typeof value["workspaceName"] === "string" &&
+    isActivatedAt(value["activatedAt"])
+  );
+}
+
+function isHostLiveFeedMessage(value: Record<string, unknown>): value is HostLiveFeedMessage {
+  if (value["type"] !== HOST_TO_WEBVIEW_MESSAGE_TYPES.liveFeed) return false;
+  if (typeof value["watching"] !== "boolean") return false;
+  return Array.isArray(value["chips"]) && value["chips"].every(isLiveFeedChip);
+}
+
+function hasOnlyKeys(value: Record<string, unknown>, keys: readonly string[]): boolean {
+  return Object.keys(value).every((key) => keys.includes(key));
+}
+
+function isWebviewSetLiveWatchingMessage(
+  value: Record<string, unknown>,
+): value is WebviewSetLiveWatchingMessage {
+  return (
+    value["type"] === WEBVIEW_TO_HOST_MESSAGE_TYPES.setLiveWatching &&
+    typeof value["watching"] === "boolean" &&
+    hasOnlyKeys(value, ["type", "watching"])
+  );
+}
+
+function isWebviewOpenLiveActivationMessage(
+  value: Record<string, unknown>,
+): value is WebviewOpenLiveActivationMessage {
+  return (
+    value["type"] === WEBVIEW_TO_HOST_MESSAGE_TYPES.openLiveActivation &&
+    typeof value["id"] === "string" &&
+    hasOnlyKeys(value, ["type", "id"])
+  );
+}
+
+function isWebviewResetLiveFeedMessage(
+  value: Record<string, unknown>,
+): value is WebviewResetLiveFeedMessage {
+  return (
+    value["type"] === WEBVIEW_TO_HOST_MESSAGE_TYPES.resetLiveFeed && hasOnlyKeys(value, ["type"])
   );
 }
 
@@ -106,7 +193,9 @@ export function isHostToWebviewMessage(value: unknown): value is HostToWebviewMe
   if (isHostCatalogMessage(value)) return true;
   if (isHostToggleResultMessage(value)) return true;
   if (isHostOpenResultMessage(value)) return true;
-  return isHostSettingsMessage(value);
+  if (isHostSettingsMessage(value)) return true;
+  if (isHostLiveFeedMessage(value)) return true;
+  return isHostWorkspaceFoldersMessage(value);
 }
 
 export function isWebviewToHostMessage(value: unknown): value is WebviewToHostMessage {
@@ -115,5 +204,9 @@ export function isWebviewToHostMessage(value: unknown): value is WebviewToHostMe
   if (value["type"] === WEBVIEW_TO_HOST_MESSAGE_TYPES.catalogRequest) return true;
   if (value["type"] === WEBVIEW_TO_HOST_MESSAGE_TYPES.openSettings) return true;
   if (isWebviewToggleEnabledMessage(value)) return true;
-  return isWebviewOpenItemMessage(value);
+  if (isWebviewOpenItemMessage(value)) return true;
+  if (isWebviewSetLiveWatchingMessage(value)) return true;
+  if (isWebviewResetLiveFeedMessage(value)) return true;
+  if (isWebviewOpenLiveActivationMessage(value)) return true;
+  return isWebviewSelectWorkspaceFolderMessage(value);
 }

@@ -1,5 +1,27 @@
 @import "tailwindcss";
 
+@theme {
+  --animate-live-chip-enter: live-chip-enter 0.45s ease-out both;
+
+  @keyframes live-chip-enter {
+    from {
+      opacity: 0;
+      grid-template-rows: 0fr;
+    }
+    to {
+      opacity: 1;
+      grid-template-rows: 1fr;
+    }
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .animate-live-chip-enter,
+  .animate-pulse {
+    animation: none;
+  }
+}
+
 :root {
   color-scheme: light dark;
 }

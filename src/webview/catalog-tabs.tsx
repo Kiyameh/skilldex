@@ -2,7 +2,8 @@ import { useRef, useState } from "react";
 import type { KeyboardEvent } from "react";
 import type { CatalogItem } from "../shared/index.js";
 import { RulesSection } from "./rules-section";
-import { SkillsSection } from "./skills-section";
+import { SkillsPanel } from "./skills-panel";
+import type { UseLiveFeedResult } from "./use-live-feed";
 
 const CATALOG_TAB_IDS = ["skills", "rules"] as const;
 
@@ -22,9 +23,12 @@ interface CatalogTabsProps {
   unfilteredRulesCount: number;
   showSkills: boolean;
   showRules: boolean;
+  showLiveArea: boolean;
   onToggleEnabled: (item: CatalogItem, nextEnabled: boolean) => void;
   onOpenItem: (item: CatalogItem) => void;
   pendingToggleIds?: ReadonlySet<string> | undefined;
+  liveFeed: UseLiveFeedResult;
+  onOpenLiveActivation: (id: string) => void;
 }
 
 function tabDomId(tabId: CatalogTabId): string {
@@ -52,26 +56,30 @@ export function CatalogTabs({
   unfilteredRulesCount,
   showSkills,
   showRules,
+  showLiveArea,
   onToggleEnabled,
   onOpenItem,
   pendingToggleIds,
+  liveFeed,
+  onOpenLiveActivation,
 }: CatalogTabsProps) {
   const [selectedTab, setSelectedTab] = useState<CatalogTabId>(DEFAULT_CATALOG_TAB);
   const tabButtonRefs = useRef<Partial<Record<CatalogTabId, HTMLButtonElement>>>({});
 
-  if (showSkills && !showRules) {
-    return (
-      <div className="flex min-h-0 flex-1 flex-col">
-        <SkillsSection
-          skills={skills}
-          unfilteredCount={unfilteredSkillsCount}
-          onToggleEnabled={onToggleEnabled}
-          onOpenItem={onOpenItem}
-          pendingToggleIds={pendingToggleIds}
-        />
-      </div>
-    );
-  }
+  const skillsPanel = (
+    <SkillsPanel
+      skills={skills}
+      unfilteredCount={unfilteredSkillsCount}
+      onToggleEnabled={onToggleEnabled}
+      onOpenItem={onOpenItem}
+      pendingToggleIds={pendingToggleIds}
+      showLiveArea={showLiveArea}
+      liveFeed={liveFeed}
+      onOpenLiveActivation={onOpenLiveActivation}
+    />
+  );
+
+  if (showSkills && !showRules) return skillsPanel;
 
   if (!showSkills && showRules) {
     return (
@@ -151,13 +159,7 @@ export function CatalogTabs({
         className="flex min-h-0 flex-1 flex-col"
       >
         {selectedTab === "skills" ? (
-          <SkillsSection
-            skills={skills}
-            unfilteredCount={unfilteredSkillsCount}
-            onToggleEnabled={onToggleEnabled}
-            onOpenItem={onOpenItem}
-            pendingToggleIds={pendingToggleIds}
-          />
+          skillsPanel
         ) : (
           <RulesSection
             rules={rules}

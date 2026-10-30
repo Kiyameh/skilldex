@@ -11,7 +11,7 @@ export function useSkilldexSettings(): SkilldexSettings | undefined {
       setSettings({
         showSkills: message.showSkills,
         showRules: message.showRules,
-        remoteSkillsRepositoryUrl: message.remoteSkillsRepositoryUrl,
+        showLiveArea: message.showLiveArea,
       });
     });
   }, []);

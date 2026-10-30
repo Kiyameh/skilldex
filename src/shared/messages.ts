@@ -6,6 +6,8 @@ export const HOST_TO_WEBVIEW_MESSAGE_TYPES = {
   toggleResult: "host/toggleResult",
   openResult: "host/openResult",
   settings: "host/settings",
+  workspaceFolders: "host/workspaceFolders",
+  liveFeed: "host/liveFeed",
 } as const;
 
 export const WEBVIEW_TO_HOST_MESSAGE_TYPES = {
@@ -14,12 +16,16 @@ export const WEBVIEW_TO_HOST_MESSAGE_TYPES = {
   toggleEnabled: "webview/toggleEnabled",
   openItem: "webview/openItem",
   openSettings: "webview/openSettings",
+  selectWorkspaceFolder: "webview/selectWorkspaceFolder",
+  setLiveWatching: "webview/setLiveWatching",
+  resetLiveFeed: "webview/resetLiveFeed",
+  openLiveActivation: "webview/openLiveActivation",
 } as const;
 
 export interface SkilldexSettings {
   showSkills: boolean;
   showRules: boolean;
-  remoteSkillsRepositoryUrl: string;
+  showLiveArea: boolean;
 }
 
 export type HostReadyMessage = {
@@ -68,7 +74,42 @@ export type HostSettingsMessage = {
   type: (typeof HOST_TO_WEBVIEW_MESSAGE_TYPES)["settings"];
   showSkills: boolean;
   showRules: boolean;
-  remoteSkillsRepositoryUrl: string;
+  showLiveArea: boolean;
+};
+
+export type WorkspaceFolderSnapshotEntry = {
+  id: string;
+  name: string;
+  path: string;
+};
+
+export type WorkspaceFolderSnapshot = {
+  folders: WorkspaceFolderSnapshotEntry[];
+  selectedId: string | null;
+};
+
+export type HostWorkspaceFoldersMessage = {
+  type: (typeof HOST_TO_WEBVIEW_MESSAGE_TYPES)["workspaceFolders"];
+  folders: WorkspaceFolderSnapshotEntry[];
+  selectedId: string | null;
+};
+
+export type LiveFeedChip = {
+  id: string;
+  name: string;
+  workspaceName: string;
+  activatedAt: string;
+};
+
+export type LiveFeedSnapshot = {
+  watching: boolean;
+  chips: LiveFeedChip[];
+};
+
+export type HostLiveFeedMessage = {
+  type: (typeof HOST_TO_WEBVIEW_MESSAGE_TYPES)["liveFeed"];
+  watching: boolean;
+  chips: LiveFeedChip[];
 };
 
 export type HostToWebviewMessage =
@@ -76,7 +117,9 @@ export type HostToWebviewMessage =
   | HostCatalogMessage
   | HostToggleResultMessage
   | HostOpenResultMessage
-  | HostSettingsMessage;
+  | HostSettingsMessage
+  | HostWorkspaceFoldersMessage
+  | HostLiveFeedMessage;
 
 export type WebviewReadyMessage = {
   type: (typeof WEBVIEW_TO_HOST_MESSAGE_TYPES)["ready"];
@@ -101,9 +144,32 @@ export type WebviewOpenSettingsMessage = {
   type: (typeof WEBVIEW_TO_HOST_MESSAGE_TYPES)["openSettings"];
 };
 
+export type WebviewSelectWorkspaceFolderMessage = {
+  type: (typeof WEBVIEW_TO_HOST_MESSAGE_TYPES)["selectWorkspaceFolder"];
+  id: string;
+};
+
+export type WebviewSetLiveWatchingMessage = {
+  type: (typeof WEBVIEW_TO_HOST_MESSAGE_TYPES)["setLiveWatching"];
+  watching: boolean;
+};
+
+export type WebviewResetLiveFeedMessage = {
+  type: (typeof WEBVIEW_TO_HOST_MESSAGE_TYPES)["resetLiveFeed"];
+};
+
+export type WebviewOpenLiveActivationMessage = {
+  type: (typeof WEBVIEW_TO_HOST_MESSAGE_TYPES)["openLiveActivation"];
+  id: string;
+};
+
 export type WebviewToHostMessage =
   | WebviewReadyMessage
   | WebviewCatalogRequestMessage
   | WebviewToggleEnabledMessage
   | WebviewOpenItemMessage
-  | WebviewOpenSettingsMessage;
+  | WebviewOpenSettingsMessage
+  | WebviewSelectWorkspaceFolderMessage
+  | WebviewSetLiveWatchingMessage
+  | WebviewResetLiveFeedMessage
+  | WebviewOpenLiveActivationMessage;

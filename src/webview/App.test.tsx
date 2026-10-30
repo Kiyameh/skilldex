@@ -14,6 +14,8 @@ const SAMPLE_SKILL = {
   characterCount: 1024,
 };
 
+const ACTIVATED_AT = "2026-10-30T10:08:00.000Z";
+
 const SAMPLE_RULE = {
   id: ".cursor/rules/example.mdc",
   kind: "rule" as const,
@@ -33,15 +35,15 @@ function dispatchSettings(
   settings: {
     showSkills: boolean;
     showRules: boolean;
-    remoteSkillsRepositoryUrl: string;
+    showLiveArea?: boolean;
   } = {
     showSkills: true,
     showRules: true,
-    remoteSkillsRepositoryUrl: "",
   },
 ): void {
   dispatchHostMessage({
     type: HOST_TO_WEBVIEW_MESSAGE_TYPES.settings,
+    showLiveArea: true,
     ...settings,
   });
 }
@@ -400,7 +402,6 @@ describe("App", () => {
     dispatchSettings({
       showSkills: false,
       showRules: false,
-      remoteSkillsRepositoryUrl: "",
     });
 
     expect(screen.getByRole("button", { name: "Configuración" })).toBeInTheDocument();
@@ -412,7 +413,6 @@ describe("App", () => {
     dispatchSettings({
       showSkills: false,
       showRules: false,
-      remoteSkillsRepositoryUrl: "",
     });
 
     expect(
@@ -429,6 +429,120 @@ describe("App", () => {
     });
   });
 
+  it("shows SkillDex and no folder choice when no workspace folder is open", () => {
+    render(<App />);
+    dispatchHostMessage({
+      type: HOST_TO_WEBVIEW_MESSAGE_TYPES.workspaceFolders,
+      folders: [],
+      selectedId: null,
+    });
+
+    const heading = screen.getByRole("heading", { name: "SkillDex" });
+    expect(heading.previousElementSibling?.tagName).toBe("svg");
+    expect(heading.querySelector("svg")).toBeNull();
+    expect(screen.queryByRole("listbox")).not.toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: /Carpeta de análisis/ })).not.toBeInTheDocument();
+  });
+
+  it("shows the only folder name and its path without a choice control", () => {
+    render(<App />);
+    dispatchHostMessage({
+      type: HOST_TO_WEBVIEW_MESSAGE_TYPES.workspaceFolders,
+      folders: [{ id: "file:///tmp/only", name: "only", path: "/tmp/only" }],
+      selectedId: "file:///tmp/only",
+    });
+
+    const heading = screen.getByRole("heading", { name: "only" });
+    expect(heading).toHaveAttribute("title", "/tmp/only");
+    expect(heading).not.toHaveTextContent("SkillDex");
+    expect(heading.previousElementSibling?.tagName).toBe("svg");
+    expect(heading.querySelector("svg")).toBeNull();
+    expect(screen.queryByRole("listbox")).not.toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: /Carpeta de análisis/ })).not.toBeInTheDocument();
+  });
+
+  it("lists every open root and asks the host to select the chosen folder", () => {
+    render(<App />);
+    dispatchHostMessage({
+      type: HOST_TO_WEBVIEW_MESSAGE_TYPES.workspaceFolders,
+      folders: [
+        { id: "file:///tmp/alpha", name: "alpha", path: "/tmp/alpha" },
+        { id: "file:///tmp/beta", name: "beta", path: "/repos/beta" },
+      ],
+      selectedId: "file:///tmp/alpha",
+    });
+
+    const chooser = screen.getByRole("button", { name: "Carpeta de análisis: alpha" });
+    expect(chooser).toHaveAttribute("aria-haspopup", "listbox");
+    expect(chooser).toHaveAttribute("title", "/tmp/alpha");
+    expect(chooser).toHaveClass("cursor-pointer");
+    expect(chooser.querySelector("svg")).not.toBeNull();
+    expect(chooser.closest("h1")?.previousElementSibling?.tagName).toBe("svg");
+
+    fireEvent.click(chooser);
+
+    const options = within(screen.getByRole("listbox")).getAllByRole("option");
+    expect(options.map((option) => option.textContent)).toEqual(["alpha", "beta"]);
+
+    fireEvent.click(options[1]!);
+    expect(postMessage).toHaveBeenCalledWith({
+      type: WEBVIEW_TO_HOST_MESSAGE_TYPES.selectWorkspaceFolder,
+      id: "file:///tmp/beta",
+    });
+    expect(screen.getByRole("button", { name: "Carpeta de análisis: beta" })).toHaveAttribute(
+      "title",
+      "/repos/beta",
+    );
+  });
+
+  it("clears the search and drops the previous catalog when the selected folder changes", () => {
+    render(<App />);
+    connectAndLoadCatalog();
+
+    dispatchHostMessage({
+      type: HOST_TO_WEBVIEW_MESSAGE_TYPES.workspaceFolders,
+      folders: [
+        { id: "file:///tmp/a", name: "alpha", path: "/tmp/a" },
+        { id: "file:///tmp/b", name: "beta", path: "/tmp/b" },
+      ],
+      selectedId: "file:///tmp/a",
+    });
+    expect(screen.getByRole("article", { name: "demo-skill" })).toBeInTheDocument();
+
+    const searchField = screen.getByRole("textbox", { name: "Encuentra algo..." });
+    fireEvent.change(searchField, { target: { value: "demo" } });
+    fireEvent.click(
+      within(screen.getByRole("article", { name: "demo-skill" })).getByRole("switch"),
+    );
+
+    dispatchHostMessage({
+      type: HOST_TO_WEBVIEW_MESSAGE_TYPES.workspaceFolders,
+      folders: [
+        { id: "file:///tmp/a", name: "alpha", path: "/tmp/a" },
+        { id: "file:///tmp/b", name: "beta", path: "/tmp/b" },
+      ],
+      selectedId: "file:///tmp/b",
+    });
+
+    expect(screen.queryByRole("article", { name: "demo-skill" })).not.toBeInTheDocument();
+    expect(searchField).toHaveValue("");
+
+    dispatchHostMessage({
+      type: HOST_TO_WEBVIEW_MESSAGE_TYPES.catalog,
+      skills: [{ ...SAMPLE_SKILL, enabled: true }],
+      rules: [],
+    });
+    dispatchHostMessage({
+      type: HOST_TO_WEBVIEW_MESSAGE_TYPES.toggleResult,
+      ok: true,
+      item: { ...SAMPLE_SKILL, enabled: false },
+    });
+
+    const skillCard = screen.getByRole("article", { name: "demo-skill" });
+    expect(within(skillCard).getByRole("switch", { name: "Auto" })).toBeInTheDocument();
+    expect(searchField).toHaveValue("");
+  });
+
   it("hides Rules when a later snapshot disables that section", () => {
     render(<App />);
     connectAndLoadCatalog();
@@ -436,12 +550,167 @@ describe("App", () => {
     dispatchSettings({
       showSkills: true,
       showRules: false,
-      remoteSkillsRepositoryUrl: "",
     });
 
     expect(screen.getByRole("article", { name: "demo-skill" })).toBeInTheDocument();
     expect(screen.queryByRole("tablist")).not.toBeInTheDocument();
     expect(screen.queryByRole("article", { name: "example-rule" })).not.toBeInTheDocument();
     expect(screen.queryByText("No hay rules todavía")).not.toBeInTheDocument();
+  });
+
+  it("hides the Live area when that preference is off and restores the same chips", () => {
+    render(<App />);
+    connectAndLoadCatalog();
+    dispatchHostMessage({
+      type: HOST_TO_WEBVIEW_MESSAGE_TYPES.liveFeed,
+      watching: true,
+      chips: [
+        {
+          id: "activation-1",
+          name: "demo-skill",
+          workspaceName: "demo",
+          activatedAt: ACTIVATED_AT,
+        },
+      ],
+    });
+
+    dispatchSettings({ showSkills: true, showRules: true, showLiveArea: false });
+
+    expect(screen.queryByRole("region", { name: "Live" })).not.toBeInTheDocument();
+    expect(screen.getByRole("article", { name: "demo-skill" })).toBeInTheDocument();
+    expect(screen.getByRole("status")).toHaveTextContent("actualizado");
+
+    dispatchSettings({ showSkills: true, showRules: true, showLiveArea: true });
+
+    expect(screen.getByRole("list", { name: "Activaciones de skills" })).toHaveTextContent(
+      "demo-skill",
+    );
+  });
+
+  it("starts Live running and empty, then paints the chips of each host snapshot", () => {
+    render(<App />);
+    connectAndLoadCatalog();
+
+    const chipList = screen.getByRole("list", { name: "Activaciones de skills" });
+    expect(screen.getByRole("img", { name: "Live en marcha" })).toBeInTheDocument();
+    expect(within(chipList).queryAllByRole("listitem")).toHaveLength(0);
+
+    dispatchHostMessage({
+      type: HOST_TO_WEBVIEW_MESSAGE_TYPES.liveFeed,
+      watching: true,
+      chips: [
+        { id: "activation-2", name: "testing", workspaceName: "demo", activatedAt: ACTIVATED_AT },
+        {
+          id: "activation-1",
+          name: "demo-skill",
+          workspaceName: "demo",
+          activatedAt: ACTIVATED_AT,
+        },
+      ],
+    });
+
+    expect(
+      within(chipList)
+        .getAllByRole("listitem")
+        .map((chip) => chip.textContent),
+    ).toEqual(["He usado testing de demo", "He usado demo-skill de demo"]);
+  });
+
+  it("sends stop, resume and reset requests from the Live buttons without touching the badge", () => {
+    render(<App />);
+    connectAndLoadCatalog();
+    postMessage.mockClear();
+
+    fireEvent.click(screen.getByRole("button", { name: "Parar Live" }));
+    expect(postMessage).toHaveBeenLastCalledWith({
+      type: WEBVIEW_TO_HOST_MESSAGE_TYPES.setLiveWatching,
+      watching: false,
+    });
+
+    dispatchHostMessage({
+      type: HOST_TO_WEBVIEW_MESSAGE_TYPES.liveFeed,
+      watching: false,
+      chips: [],
+    });
+    expect(screen.getByRole("img", { name: "Live parado" })).toBeInTheDocument();
+    expect(screen.getByRole("status")).toHaveTextContent("actualizado");
+
+    fireEvent.click(screen.getByRole("button", { name: "Reanudar Live" }));
+    expect(postMessage).toHaveBeenLastCalledWith({
+      type: WEBVIEW_TO_HOST_MESSAGE_TYPES.setLiveWatching,
+      watching: true,
+    });
+
+    fireEvent.click(screen.getByRole("button", { name: "Reiniciar Live" }));
+    expect(postMessage).toHaveBeenLastCalledWith({
+      type: WEBVIEW_TO_HOST_MESSAGE_TYPES.resetLiveFeed,
+    });
+  });
+
+  it("opens the skill document when a live chip is clicked", () => {
+    render(<App />);
+    connectAndLoadCatalog();
+    dispatchHostMessage({
+      type: HOST_TO_WEBVIEW_MESSAGE_TYPES.liveFeed,
+      watching: true,
+      chips: [
+        {
+          id: "activation-1",
+          name: "demo-skill",
+          workspaceName: "demo",
+          activatedAt: ACTIVATED_AT,
+        },
+      ],
+    });
+    postMessage.mockClear();
+
+    fireEvent.click(screen.getByRole("button", { name: "Abrir demo-skill" }));
+
+    expect(postMessage).toHaveBeenCalledWith({
+      type: WEBVIEW_TO_HOST_MESSAGE_TYPES.openLiveActivation,
+      id: "activation-1",
+    });
+  });
+
+  it("keeps Live chips when another analysis folder is chosen", () => {
+    render(<App />);
+    connectAndLoadCatalog();
+    dispatchHostMessage({
+      type: HOST_TO_WEBVIEW_MESSAGE_TYPES.workspaceFolders,
+      folders: [
+        { id: "file:///tmp/a", name: "a", path: "/tmp/a" },
+        { id: "file:///tmp/b", name: "b", path: "/tmp/b" },
+      ],
+      selectedId: "file:///tmp/a",
+    });
+    dispatchHostMessage({
+      type: HOST_TO_WEBVIEW_MESSAGE_TYPES.liveFeed,
+      watching: true,
+      chips: [
+        {
+          id: "activation-1",
+          name: "demo-skill",
+          workspaceName: "demo",
+          activatedAt: ACTIVATED_AT,
+        },
+      ],
+    });
+
+    dispatchHostMessage({
+      type: HOST_TO_WEBVIEW_MESSAGE_TYPES.workspaceFolders,
+      folders: [
+        { id: "file:///tmp/a", name: "a", path: "/tmp/a" },
+        { id: "file:///tmp/b", name: "b", path: "/tmp/b" },
+      ],
+      selectedId: "file:///tmp/b",
+    });
+    dispatchHostMessage({
+      type: HOST_TO_WEBVIEW_MESSAGE_TYPES.catalog,
+      skills: [SAMPLE_SKILL],
+      rules: [],
+    });
+
+    const chipList = screen.getByRole("list", { name: "Activaciones de skills" });
+    expect(within(chipList).getByText("demo-skill")).toBeInTheDocument();
   });
 });

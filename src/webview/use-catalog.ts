@@ -7,6 +7,7 @@ import {
 import {
   requestCatalog,
   requestOpenItem,
+  requestOpenLiveActivation,
   requestToggleEnabled,
   subscribeToHostMessages,
 } from "./host-message-bridge";
@@ -19,6 +20,8 @@ export interface UseCatalogResult {
   pendingToggleIds: ReadonlySet<string>;
   toggleItemEnabled: (item: CatalogItem, nextEnabled: boolean) => void;
   openItem: (item: CatalogItem) => void;
+  openLiveActivation: (id: string) => void;
+  resetForFolderChange: () => void;
   clearToggleError: () => void;
   clearOpenError: () => void;
 }
@@ -52,6 +55,9 @@ export function useCatalog(handshakeStatus: HandshakeStatus): UseCatalogResult {
   const [openError, setOpenError] = useState<string | undefined>(undefined);
   const [pendingToggleIds, setPendingToggleIds] = useState<ReadonlySet<string>>(() => new Set());
   const latestTargetByIdRef = useRef<Map<string, boolean>>(new Map());
+  const actionEpochRef = useRef(0);
+  const toggleEpochByIdRef = useRef<Map<string, number>>(new Map());
+  const openEpochRef = useRef<number | null>(null);
 
   useEffect(() => {
     if (handshakeStatus !== "connected") return;
@@ -66,10 +72,12 @@ export function useCatalog(handshakeStatus: HandshakeStatus): UseCatalogResult {
         });
         setPendingToggleIds(new Set());
         latestTargetByIdRef.current.clear();
+        toggleEpochByIdRef.current.clear();
         return;
       }
 
       if (message.type === HOST_TO_WEBVIEW_MESSAGE_TYPES.openResult) {
+        if (openEpochRef.current !== actionEpochRef.current) return;
         if (message.ok) {
           setOpenError(undefined);
           return;
@@ -79,6 +87,9 @@ export function useCatalog(handshakeStatus: HandshakeStatus): UseCatalogResult {
       }
 
       if (message.type !== HOST_TO_WEBVIEW_MESSAGE_TYPES.toggleResult) return;
+
+      const resultId = message.ok ? message.item.id : message.id;
+      if (toggleEpochByIdRef.current.get(resultId) !== actionEpochRef.current) return;
 
       if (message.ok) {
         const latestTarget = latestTargetByIdRef.current.get(message.item.id);
@@ -114,8 +125,20 @@ export function useCatalog(handshakeStatus: HandshakeStatus): UseCatalogResult {
     });
   }, [handshakeStatus]);
 
+  const resetForFolderChange = useCallback(() => {
+    actionEpochRef.current += 1;
+    latestTargetByIdRef.current.clear();
+    toggleEpochByIdRef.current.clear();
+    openEpochRef.current = null;
+    setCatalog(undefined);
+    setPendingToggleIds(new Set());
+    setToggleError(undefined);
+    setOpenError(undefined);
+  }, []);
+
   const toggleItemEnabled = useCallback((item: CatalogItem, nextEnabled: boolean) => {
     latestTargetByIdRef.current.set(item.id, nextEnabled);
+    toggleEpochByIdRef.current.set(item.id, actionEpochRef.current);
     setToggleError(undefined);
     setOpenError(undefined);
     setPendingToggleIds((previous) => new Set(previous).add(item.id));
@@ -126,9 +149,17 @@ export function useCatalog(handshakeStatus: HandshakeStatus): UseCatalogResult {
   }, []);
 
   const openItem = useCallback((item: CatalogItem) => {
+    openEpochRef.current = actionEpochRef.current;
     setOpenError(undefined);
     setToggleError(undefined);
     requestOpenItem(item.id);
+  }, []);
+
+  const openLiveActivation = useCallback((id: string) => {
+    openEpochRef.current = actionEpochRef.current;
+    setOpenError(undefined);
+    setToggleError(undefined);
+    requestOpenLiveActivation(id);
   }, []);
 
   const clearToggleError = useCallback(() => {
@@ -146,6 +177,8 @@ export function useCatalog(handshakeStatus: HandshakeStatus): UseCatalogResult {
     pendingToggleIds,
     toggleItemEnabled,
     openItem,
+    openLiveActivation,
+    resetForFolderChange,
     clearToggleError,
     clearOpenError,
   };

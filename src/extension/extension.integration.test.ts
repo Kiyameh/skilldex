@@ -28,6 +28,8 @@ suite("SkillDex extension scaffold", () => {
     const configuration = vscode.workspace.getConfiguration("skilldex");
     assert.equal(configuration.get("showSkills"), true);
     assert.equal(configuration.get("showRules"), true);
-    assert.equal(configuration.get("remoteSkillsRepositoryUrl"), "");
+    assert.equal(configuration.get("showLiveArea"), true);
+    assert.equal(configuration.get("ai-tool-directory"), ".cursor");
+    assert.equal(configuration.get("remoteSkillsRepositoryUrl"), undefined);
   });
 });

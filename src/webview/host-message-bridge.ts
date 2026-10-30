@@ -40,6 +40,22 @@ export function requestOpenItem(id: string): void {
   postToHost({ type: WEBVIEW_TO_HOST_MESSAGE_TYPES.openItem, id });
 }
 
+export function requestOpenLiveActivation(id: string): void {
+  postToHost({ type: WEBVIEW_TO_HOST_MESSAGE_TYPES.openLiveActivation, id });
+}
+
 export function requestOpenSettings(): void {
   postToHost({ type: WEBVIEW_TO_HOST_MESSAGE_TYPES.openSettings });
+}
+
+export function requestSelectWorkspaceFolder(id: string): void {
+  postToHost({ type: WEBVIEW_TO_HOST_MESSAGE_TYPES.selectWorkspaceFolder, id });
+}
+
+export function requestSetLiveWatching(watching: boolean): void {
+  postToHost({ type: WEBVIEW_TO_HOST_MESSAGE_TYPES.setLiveWatching, watching });
+}
+
+export function requestResetLiveFeed(): void {
+  postToHost({ type: WEBVIEW_TO_HOST_MESSAGE_TYPES.resetLiveFeed });
 }
