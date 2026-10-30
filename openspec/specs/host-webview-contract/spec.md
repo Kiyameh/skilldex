@@ -85,12 +85,12 @@ The shared contract SHALL support a Host→Webview catalog update message that c
 - **THEN** it MUST send the typed catalog update message to the Webview
 
 ### Requirement: Settings snapshot message
-The shared contract SHALL define a Host→Webview message whose discriminant identifies a settings snapshot and whose payload is `showSkills` (boolean), `showRules` (boolean), and `remoteSkillsRepositoryUrl` (string). The use of `any` for this payload is forbidden.
+The shared contract SHALL define a Host→Webview message whose discriminant identifies a settings snapshot and whose payload is `showSkills` (boolean), `showRules` (boolean), and `showLiveArea` (boolean). The use of `any` for this payload is forbidden.
 
 #### Scenario: Snapshot fields are typed
 - **WHEN** the Host sends the current SkillDex preferences
 - **THEN** the message MUST be the settings snapshot defined by the shared contract
-- **AND** it MUST include `showSkills` and `showRules` as booleans and `remoteSkillsRepositoryUrl` as a string
+- **AND** it MUST include `showSkills`, `showRules`, and `showLiveArea` as booleans
 
 ### Requirement: Open settings request message
 The shared contract SHALL define a Webview→Host message that asks the Host to open the native settings page. The message MUST NOT carry setting values.
@@ -109,3 +109,91 @@ The Host SHALL send a settings snapshot when the dashboard Webview session start
 #### Scenario: Snapshot after a configuration change
 - **WHEN** a `skilldex` configuration value changes while the dashboard Webview session is active
 - **THEN** the Host MUST send a new settings snapshot with the effective values
+
+### Requirement: Workspace folder snapshot message
+The shared contract SHALL define a Host→Webview message whose discriminant identifies a workspace-folder snapshot. The payload MUST be `folders`, an array of `{ id: string, name: string, path: string }` in workspace order, and `selectedId`, a string equal to one folder `id` or `null` when there are no folders. `id` MUST be the folder URI. `name` MUST be the workspace folder name. `path` MUST be the folder filesystem path. The use of `any` for this payload is forbidden.
+
+#### Scenario: Snapshot fields are typed
+- **WHEN** the Host sends the open workspace folders
+- **THEN** the message MUST be the workspace-folder snapshot defined by the shared contract
+- **AND** each folder MUST include `id`, `name`, and `path` as strings
+- **AND** `selectedId` MUST be the `id` of one of those folders or `null`
+
+### Requirement: Select workspace folder message
+The shared contract SHALL define a Webview→Host message that asks the Host to select a workspace folder. The payload MUST be the folder `id` string. The message MUST NOT carry catalog items.
+
+#### Scenario: Select request is typed
+- **WHEN** the Webview asks to analyze another workspace folder
+- **THEN** it MUST send the select-workspace-folder message defined by the shared contract
+- **AND** the message MUST include that folder `id`
+- **AND** the message MUST NOT include skills or rules
+
+### Requirement: Host pushes a workspace folder snapshot
+The Host SHALL send a workspace-folder snapshot when the dashboard Webview session starts, when the set of open workspace folders changes, and when the selected folder changes. On session start, `selectedId` MUST be the last selection stored for that window when that folder is still open; otherwise it MUST be the first open folder, or `null` when none are open. An `id` that is not in `folders` MUST NOT change `selectedId` and MUST NOT replace the catalog.
+
+#### Scenario: Snapshot when the session starts
+- **WHEN** the dashboard Webview session starts
+- **THEN** the Host MUST send a workspace-folder snapshot for the open workspace folders
+
+#### Scenario: Stored selection is restored
+- **WHEN** the session starts, a previous selection was stored for that window, and that folder is still open
+- **THEN** `selectedId` MUST be that folder's `id`
+
+#### Scenario: Missing stored selection uses the first folder
+- **WHEN** the session starts, there is no stored selection that still matches an open folder, and at least one folder is open
+- **THEN** `selectedId` MUST be the `id` of the first workspace folder
+
+#### Scenario: No folder sends a null selection
+- **WHEN** the session starts and no workspace folder is open
+- **THEN** `folders` MUST be empty
+- **AND** `selectedId` MUST be `null`
+
+#### Scenario: Adding a folder keeps the current selection
+- **WHEN** a workspace folder is added and the current selection is still open
+- **THEN** the Host MUST send a new snapshot that includes the added folder
+- **AND** `selectedId` MUST stay the current folder's `id`
+
+#### Scenario: Removing the selected folder falls back to the first
+- **WHEN** the selected folder is removed and at least one other folder remains open
+- **THEN** the Host MUST send a snapshot whose `selectedId` is the `id` of the first remaining folder
+
+#### Scenario: Unknown id does not switch the catalog
+- **WHEN** the Webview sends a select request whose `id` is not one of the open folders
+- **THEN** the Host MUST keep the current `selectedId`
+- **AND** the Host MUST NOT replace the catalog with items from another folder
+
+### Requirement: Live feed snapshot message
+El contrato compartido SHALL definir un mensaje Host→Webview cuyo discriminante identifique la instantánea del feed Live. El payload MUST ser `watching` (boolean) y `chips`, un array ordenado del más reciente al más antiguo. Cada chip MUST ser `{ id: string, name: string, workspaceName: string, activatedAt: string }`. `id` MUST identificar esa activación y MUST NOT reutilizarse para otra. `name` MUST ser el texto visible del chip. `workspaceName` MUST ser el nombre de la carpeta de trabajo, sin la ruta. `activatedAt` MUST ser el instante de esa activación en ISO 8601. El uso de `any` en este payload está prohibido. El mensaje MUST NOT incluir el cuerpo de la skill ni la ruta del fichero.
+
+#### Scenario: Snapshot shape
+- **WHEN** el Host publica el feed Live
+- **THEN** el mensaje MUST incluir `watching` y `chips`
+- **AND** cada elemento de `chips` MUST incluir `id`, `name`, `workspaceName` y `activatedAt`
+- **AND** el primer elemento MUST ser el chip más reciente
+
+### Requirement: Live feed control messages
+El contrato compartido SHALL definir tres mensajes Webview→Host. Uno MUST pedir el estado del watcher con payload `watching` (boolean). Otro MUST pedir vaciar el feed y MUST NOT llevar payload. Otro MUST pedir abrir el `SKILL.md` de una activación con payload `id` (string), el id del chip, y MUST NOT llevar la ruta. Ninguno de los tres MUST incluir chips ni ítems de catálogo. El uso de `any` está prohibido.
+
+#### Scenario: Watching request
+- **WHEN** el Webview pide parar o reanudar el watcher
+- **THEN** el mensaje MUST llevar `watching` con el estado pedido
+
+#### Scenario: Reset request
+- **WHEN** el Webview pide reiniciar el feed
+- **THEN** el mensaje MUST NOT llevar payload
+
+#### Scenario: Open request
+- **WHEN** el Webview pide abrir el documento de una activación
+- **THEN** el mensaje MUST llevar el `id` de ese chip
+- **AND** MUST NOT llevar la ruta del fichero
+
+### Requirement: Host publishes the live feed on session start and on change
+El Host SHALL enviar la instantánea del feed Live al empezar la sesión del Webview, al cambiar `watching` y al cambiar la lista de chips. En el arranque de la sesión `watching` MUST ser `true` y `chips` MUST ser un array vacío. Tras un reinicio, `chips` MUST ser un array vacío y `watching` MUST conservar el valor anterior.
+
+#### Scenario: Session start snapshot
+- **WHEN** empieza la sesión del Webview
+- **THEN** el Host MUST enviar una instantánea con `watching` verdadero y `chips` vacío
+
+#### Scenario: Reset snapshot keeps watching
+- **WHEN** el Webview pide reiniciar el feed con el watcher en marcha
+- **THEN** el Host MUST responder con `chips` vacío y `watching` verdadero
