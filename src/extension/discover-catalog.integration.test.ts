@@ -10,10 +10,9 @@ suite("SkillDex catalog discovery", () => {
 
     try {
       await mkdir(path.join(workspaceRoot, ".cursor", "rules"), { recursive: true });
-      await mkdir(
-        path.join(workspaceRoot, ".cursor", "skills", "stack", "demo", "temp-skill"),
-        { recursive: true },
-      );
+      await mkdir(path.join(workspaceRoot, ".cursor", "skills", "stack", "demo", "temp-skill"), {
+        recursive: true,
+      });
       await mkdir(path.join(workspaceRoot, ".cursor", "skills", "root-skill"), {
         recursive: true,
       });
@@ -32,15 +31,7 @@ suite("SkillDex catalog discovery", () => {
         ].join("\n"),
       );
       await writeFile(
-        path.join(
-          workspaceRoot,
-          ".cursor",
-          "skills",
-          "stack",
-          "demo",
-          "temp-skill",
-          "SKILL.md",
-        ),
+        path.join(workspaceRoot, ".cursor", "skills", "stack", "demo", "temp-skill", "SKILL.md"),
         [
           "---",
           "name: temp-skill",

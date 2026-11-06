@@ -3,10 +3,7 @@ import { mkdir, mkdtemp, rm, writeFile } from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
 import * as vscode from "vscode";
-import {
-  CATALOG_LIVE_SYNC_DEBOUNCE_MS,
-  startCatalogLiveSync,
-} from "./catalog-live-sync.js";
+import { CATALOG_LIVE_SYNC_DEBOUNCE_MS, startCatalogLiveSync } from "./catalog-live-sync.js";
 import type { CatalogPayload } from "../shared/index.js";
 
 const POLL_INTERVAL_MS = 50;
@@ -29,9 +26,7 @@ async function waitForCatalog(
 
 suite("SkillDex catalog live sync", () => {
   test("refreshes catalog after skill edit and rule delete, then stops after dispose", async () => {
-    const workspaceRoot = await mkdtemp(
-      path.join(os.tmpdir(), "skilldex-integration-live-sync-"),
-    );
+    const workspaceRoot = await mkdtemp(path.join(os.tmpdir(), "skilldex-integration-live-sync-"));
     const skillDir = path.join(workspaceRoot, ".cursor", "skills", "temp-skill");
     const rulesDir = path.join(workspaceRoot, ".cursor", "rules");
     const skillPath = path.join(skillDir, "SKILL.md");
@@ -46,13 +41,7 @@ suite("SkillDex catalog live sync", () => {
 
       await writeFile(
         skillPath,
-        [
-          "---",
-          "name: temp-skill",
-          "description: Temporary skill",
-          "---",
-          "body",
-        ].join("\n"),
+        ["---", "name: temp-skill", "description: Temporary skill", "---", "body"].join("\n"),
       );
       await writeFile(
         rulePath,
@@ -68,9 +57,7 @@ suite("SkillDex catalog live sync", () => {
       const sync = startCatalogLiveSync({
         getWorkspaceFolder: () => workspaceFolder,
         createFileSystemWatcher: (base, globPattern) =>
-          vscode.workspace.createFileSystemWatcher(
-            new vscode.RelativePattern(base, globPattern),
-          ),
+          vscode.workspace.createFileSystemWatcher(new vscode.RelativePattern(base, globPattern)),
         debounceMs: CATALOG_LIVE_SYNC_DEBOUNCE_MS,
       });
 
@@ -84,13 +71,9 @@ suite("SkillDex catalog live sync", () => {
 
       await writeFile(
         skillPath,
-        [
-          "---",
-          "name: temp-skill",
-          "description: Updated skill description",
-          "---",
-          "body",
-        ].join("\n"),
+        ["---", "name: temp-skill", "description: Updated skill description", "---", "body"].join(
+          "\n",
+        ),
       );
 
       const afterEdit = await waitForCatalog(
@@ -119,17 +102,9 @@ suite("SkillDex catalog live sync", () => {
 
       await writeFile(
         skillPath,
-        [
-          "---",
-          "name: temp-skill",
-          "description: Should not refresh",
-          "---",
-          "body",
-        ].join("\n"),
+        ["---", "name: temp-skill", "description: Should not refresh", "---", "body"].join("\n"),
       );
-      await new Promise((resolve) =>
-        setTimeout(resolve, CATALOG_LIVE_SYNC_DEBOUNCE_MS + 400),
-      );
+      await new Promise((resolve) => setTimeout(resolve, CATALOG_LIVE_SYNC_DEBOUNCE_MS + 400));
 
       assert.equal(pushCount, pushCountAfterDispose);
       assert.notEqual(latestCatalog?.skills[0]?.description, "Should not refresh");

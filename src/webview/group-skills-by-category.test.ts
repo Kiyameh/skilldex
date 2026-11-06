@@ -1,9 +1,6 @@
 import { describe, expect, it } from "vitest";
 import type { CatalogItem } from "../shared/index.js";
-import {
-  UNCATEGORIZED_GROUP_ID,
-  groupSkillsByCategory,
-} from "./group-skills-by-category";
+import { UNCATEGORIZED_GROUP_ID, groupSkillsByCategory } from "./group-skills-by-category";
 
 function buildSkill(overrides: Partial<CatalogItem> = {}): CatalogItem {
   return {
@@ -26,11 +23,7 @@ describe("groupSkillsByCategory", () => {
 
     const groups = groupSkillsByCategory(skills);
 
-    expect(groups.map((group) => group.label)).toEqual([
-      UNCATEGORIZED_GROUP_ID,
-      "Stack",
-      "Tools",
-    ]);
+    expect(groups.map((group) => group.label)).toEqual([UNCATEGORIZED_GROUP_ID, "Stack", "Tools"]);
     expect(groups[0]?.skills.map((skill) => skill.title)).toEqual(["root-b"]);
   });
 
@@ -48,9 +41,7 @@ describe("groupSkillsByCategory", () => {
   });
 
   it("Title Cases hyphenated folder names", () => {
-    const groups = groupSkillsByCategory([
-      buildSkill({ category: "foo-bar", title: "nested" }),
-    ]);
+    const groups = groupSkillsByCategory([buildSkill({ category: "foo-bar", title: "nested" })]);
 
     expect(groups[0]?.label).toBe("Foo Bar");
   });

@@ -99,14 +99,7 @@ describe("setItemEnabled", () => {
     const skillPath = path.join(skillDir, "SKILL.md");
     await writeFile(
       skillPath,
-      [
-        "---",
-        "name: legacy",
-        "enabled: true",
-        "---",
-        BODY_MARKER,
-        "",
-      ].join("\n"),
+      ["---", "name: legacy", "enabled: true", "---", BODY_MARKER, ""].join("\n"),
     );
 
     const result = await setItemEnabled(root, ".cursor/skills/legacy/SKILL.md", false);
@@ -127,14 +120,9 @@ describe("setItemEnabled", () => {
     const skillPath = path.join(skillDir, "SKILL.md");
     await writeFile(
       skillPath,
-      [
-        "---",
-        "name: temp-skill",
-        "disable-model-invocation: true",
-        "---",
-        BODY_MARKER,
-        "",
-      ].join("\n"),
+      ["---", "name: temp-skill", "disable-model-invocation: true", "---", BODY_MARKER, ""].join(
+        "\n",
+      ),
     );
 
     const result = await setItemEnabled(root, ".cursor/skills/temp-skill/SKILL.md", true);
