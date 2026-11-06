@@ -3,5 +3,18 @@
   "compilerOptions": {
     "types": ["node"]
   },
-  "exclude": ["node_modules", "dist", "out", "src/webview/vite.config.ts"]
+  "include": [
+    "src/webview/**/*.ts",
+    "src/webview/**/*.tsx",
+    "src/webview/**/*.d.ts",
+    "src/shared/**/*.ts",
+    "src/extension/**/*.test.ts"
+  ],
+  "exclude": [
+    "node_modules",
+    "dist",
+    "out",
+    "src/webview/vite.config.ts",
+    "src/**/*.integration.test.ts"
+  ]
 }
