@@ -44,9 +44,27 @@ export interface LiveActivationIntake extends Disposable {
 
 type LineHandler = (line: string, sourceFilePath: string) => void;
 
-/** Cursor names each project folder after the workspace path with every non-alphanumeric character as `-`. */
+const WINDOWS_ABSOLUTE_PATH = /^[A-Za-z]:[\\/]/u;
+
+/**
+ * Cursor names each project folder from the workspace path.
+ * On Unix every non-alphanumeric character becomes `-`, and a leading dash is dropped.
+ * On Windows the drive letter is lowercased, `:` is not its own dash, and consecutive
+ * separators collapse into one `-`.
+ */
 export function cursorProjectSlug(workspacePath: string): string {
+  if (WINDOWS_ABSOLUTE_PATH.test(workspacePath)) return windowsProjectSlug(workspacePath);
   return workspacePath.replace(/[^a-zA-Z0-9]/gu, "-").replace(/^-/u, "");
+}
+
+function windowsProjectSlug(workspacePath: string): string {
+  const drive = workspacePath.slice(0, 1).toLowerCase();
+  const collapsed = workspacePath
+    .slice(2)
+    .replace(/[^a-zA-Z0-9]+/gu, "-")
+    .replace(/^-|-$/gu, "");
+  if (collapsed.length === 0) return drive;
+  return `${drive}-${collapsed}`;
 }
 
 async function fileSize(filePath: string): Promise<number | undefined> {

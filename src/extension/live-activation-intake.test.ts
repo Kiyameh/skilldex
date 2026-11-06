@@ -62,6 +62,19 @@ describe("cursorProjectSlug", () => {
       cursorProjectSlug("/Users/me/Library/Application Support/Cursor/Workspaces/1/workspace.json"),
     ).toBe("Users-me-Library-Application-Support-Cursor-Workspaces-1-workspace-json");
   });
+
+  it("matches the project folder Cursor creates for a Windows workspace", () => {
+    expect(cursorProjectSlug(String.raw`D:\projects`)).toBe("d-projects");
+    expect(cursorProjectSlug(String.raw`D:\projects\the-tool-app`)).toBe("d-projects-the-tool-app");
+    expect(cursorProjectSlug(String.raw`C:\Users\kiyam\.cursor\hooks`)).toBe(
+      "c-Users-kiyam-cursor-hooks",
+    );
+    expect(
+      cursorProjectSlug(
+        String.raw`C:\Users\kiyam\AppData\Roaming\Cursor\Workspaces\1771526196811\workspace.json`,
+      ),
+    ).toBe("c-Users-kiyam-AppData-Roaming-Cursor-Workspaces-1771526196811-workspace-json");
+  });
 });
 
 describe("startLiveActivationIntake", () => {
@@ -127,6 +140,28 @@ describe("startLiveActivationIntake", () => {
   function chipNames(): string[] {
     return feed.getSnapshot().chips.map((chip) => chip.name);
   }
+
+  it("watches the Windows project folder Cursor creates for that workspace", () => {
+    const workspacePath = String.raw`D:\projects\the-tool-app`;
+    intake = startLiveActivationIntake({
+      spoolPath,
+      projectsDirectory,
+      workspacePaths: [workspacePath],
+      openFolderPaths: [workspacePath],
+      watchFiles,
+      onSkillActivated: () => undefined,
+    });
+
+    expect(
+      watches.map(({ baseDirectory, globPattern }) => ({ baseDirectory, globPattern })),
+    ).toEqual([
+      { baseDirectory: path.dirname(spoolPath), globPattern: "skill-reads.jsonl" },
+      {
+        baseDirectory: projectsDirectory,
+        globPattern: "d-projects-the-tool-app/agent-transcripts/**/*.jsonl",
+      },
+    ]);
+  });
 
   it("watches the spool and the transcripts of the open workspace slug", () => {
     start();
