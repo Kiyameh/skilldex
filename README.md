@@ -20,7 +20,7 @@ Descubre todo el catálogo de herramientas IA y lo muestra en un práctico dashb
    npm run package
    ```
 
-   Se crea `skilldex-1.1.1.vsix` en la carpeta `download`.
+   Se crea `skilldex-1.1.2.vsix` en la carpeta `download`.
 
 2. En Cursor: paleta de comandos (F1)
 3. Escribe `Extensions: Install from VSIX` → selecciona el archivo.
