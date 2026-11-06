@@ -3,6 +3,7 @@
   "displayName": "SkillDex",
   "description": "Panel para descubrir, activar y editar Rules y Skills locales bajo .cursor/ en Cursor",
   "version": "1.1.1",
+  "icon": "media/logo.png",
   "publisher": "andoni",
   "author": {
     "name": "Andoni Gallardo"
