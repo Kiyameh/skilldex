@@ -24,18 +24,48 @@ export interface LiveActivationIntakeOptions {
   onSkillActivated: (skillFilePath: string, workspaceDirectory: string) => void;
 }
 
+const WINDOWS_LEADING_SLASH_DRIVE = /^[\\/](?=[A-Za-z]:[\\/])/u;
+const WINDOWS_DRIVE_PATH = /^[A-Za-z]:[\\/]/u;
+
+/** Cursor on Windows prefixes a drive path with `/`, which Node keeps as a different path. */
+function isWindowsPath(filePath: string): boolean {
+  return WINDOWS_DRIVE_PATH.test(filePath.replace(WINDOWS_LEADING_SLASH_DRIVE, ""));
+}
+
+function filesystemPath(filePath: string): string {
+  if (!isWindowsPath(filePath)) return path.resolve(filePath);
+  const normalized = path.win32.normalize(filePath.replace(WINDOWS_LEADING_SLASH_DRIVE, ""));
+  if (/^[A-Za-z]:\\$/u.test(normalized)) return normalized;
+  return normalized.replace(/[\\/]+$/u, "");
+}
+
+function canonicalPathKey(filePath: string): string {
+  const normalized = filesystemPath(filePath);
+  if (!isWindowsPath(filePath)) return normalized;
+  return normalized.toLowerCase();
+}
+
+function directoryContains(fileKey: string, directory: string): boolean {
+  const directoryKey = canonicalPathKey(directory);
+  const separator = isWindowsPath(directory) ? "\\" : path.sep;
+  return fileKey === directoryKey || fileKey.startsWith(`${directoryKey}${separator}`);
+}
+
 export function directoryContainingPath(
   filePath: string,
   directories: readonly string[],
 ): string | undefined {
-  const resolvedFilePath = path.resolve(filePath);
-  return directories
-    .map((directory) => path.resolve(directory))
-    .filter(
-      (directory) =>
-        resolvedFilePath === directory || resolvedFilePath.startsWith(`${directory}${path.sep}`),
-    )
-    .sort((left, right) => right.length - left.length)[0];
+  const fileKey = canonicalPathKey(filePath);
+  const winner = directories
+    .filter((directory) => directoryContains(fileKey, directory))
+    .sort((left, right) => canonicalPathKey(right).length - canonicalPathKey(left).length)[0];
+  if (winner === undefined) return undefined;
+  return filesystemPath(winner);
+}
+
+function activationSkillPath(skillFilePath: string): string {
+  if (!isWindowsPath(skillFilePath)) return skillFilePath;
+  return filesystemPath(skillFilePath);
 }
 
 export interface LiveActivationIntake extends Disposable {
@@ -44,8 +74,6 @@ export interface LiveActivationIntake extends Disposable {
 
 type LineHandler = (line: string, sourceFilePath: string) => void;
 
-const WINDOWS_ABSOLUTE_PATH = /^[A-Za-z]:[\\/]/u;
-
 /**
  * Cursor names each project folder from the workspace path.
  * On Unix every non-alphanumeric character becomes `-`, and a leading dash is dropped.
@@ -53,7 +81,7 @@ const WINDOWS_ABSOLUTE_PATH = /^[A-Za-z]:[\\/]/u;
  * separators collapse into one `-`.
  */
 export function cursorProjectSlug(workspacePath: string): string {
-  if (WINDOWS_ABSOLUTE_PATH.test(workspacePath)) return windowsProjectSlug(workspacePath);
+  if (isWindowsPath(workspacePath)) return windowsProjectSlug(filesystemPath(workspacePath));
   return workspacePath.replace(/[^a-zA-Z0-9]/gu, "-").replace(/^-/u, "");
 }
 
@@ -94,7 +122,9 @@ export function startLiveActivationIntake(
   options: LiveActivationIntakeOptions,
 ): LiveActivationIntake {
   const offsets = new Map<string, number>();
-  const openFolderPaths = new Set(options.openFolderPaths.map((folder) => path.resolve(folder)));
+  const openFolders = new Map(
+    options.openFolderPaths.map((folder) => [canonicalPathKey(folder), folder]),
+  );
   const slugs = [...new Set(options.workspacePaths.map(cursorProjectSlug))];
   let disposed = false;
   let queue: Promise<void> = Promise.resolve();
@@ -135,10 +165,13 @@ export function startLiveActivationIntake(
     skillFilePath: string,
     candidates: readonly string[],
   ): string | undefined => {
-    const openCandidates = candidates
-      .map((candidate) => path.resolve(candidate))
-      .filter((candidate) => openFolderPaths.has(candidate));
-    return directoryContainingPath(skillFilePath, openCandidates) ?? openCandidates[0];
+    const openCandidates = candidates.flatMap((candidate) => {
+      const folder = openFolders.get(canonicalPathKey(candidate));
+      return folder === undefined ? [] : [folder];
+    });
+    const fallback = openCandidates[0];
+    if (fallback === undefined) return undefined;
+    return directoryContainingPath(skillFilePath, openCandidates) ?? filesystemPath(fallback);
   };
 
   const workspacePathForTranscript = (sourceFilePath: string): string | undefined => {
@@ -155,16 +188,16 @@ export function startLiveActivationIntake(
     if (entry === undefined) return;
     const workspaceDirectory = workspaceDirectoryFor(entry.skillFilePath, entry.workspaceRoots);
     if (workspaceDirectory === undefined) return;
-    options.onSkillActivated(entry.skillFilePath, workspaceDirectory);
+    options.onSkillActivated(activationSkillPath(entry.skillFilePath), workspaceDirectory);
   };
 
   const handleTranscriptLine: LineHandler = (line, sourceFilePath) => {
     const eventWorkspace = workspacePathForTranscript(sourceFilePath);
     for (const skillFilePath of parseAttachedSkillPaths(line)) {
       const workspaceDirectory =
-        directoryContainingPath(skillFilePath, [...openFolderPaths]) ?? eventWorkspace;
+        directoryContainingPath(skillFilePath, [...openFolders.values()]) ?? eventWorkspace;
       if (workspaceDirectory === undefined) continue;
-      options.onSkillActivated(skillFilePath, workspaceDirectory);
+      options.onSkillActivated(activationSkillPath(skillFilePath), workspaceDirectory);
     }
   };
 

@@ -53,6 +53,15 @@ describe("directoryContainingPath", () => {
   it("returns nothing when the file is outside every directory", () => {
     expect(directoryContainingPath("/skills/maquetado/SKILL.md", ["/repo"])).toBeUndefined();
   });
+
+  it("treats Cursor's leading slash on a Windows drive as the same folder", () => {
+    expect(
+      directoryContainingPath("/D:/projects/carpeta/.cursor/skills/maquetado/SKILL.md", [
+        String.raw`C:\otra`,
+        String.raw`D:\projects\carpeta`,
+      ]),
+    ).toBe(String.raw`D:\projects\carpeta`);
+  });
 });
 
 describe("cursorProjectSlug", () => {
@@ -65,6 +74,7 @@ describe("cursorProjectSlug", () => {
 
   it("matches the project folder Cursor creates for a Windows workspace", () => {
     expect(cursorProjectSlug(String.raw`D:\projects`)).toBe("d-projects");
+    expect(cursorProjectSlug("/D:/projects")).toBe("d-projects");
     expect(cursorProjectSlug(String.raw`D:\projects\the-tool-app`)).toBe("d-projects-the-tool-app");
     expect(cursorProjectSlug(String.raw`C:\Users\kiyam\.cursor\hooks`)).toBe(
       "c-Users-kiyam-cursor-hooks",
@@ -175,6 +185,56 @@ describe("startLiveActivationIntake", () => {
         globPattern: `${cursorProjectSlug(OPEN_FOLDER)}/agent-transcripts/**/*.jsonl`,
       },
     ]);
+  });
+
+  it("accepts a Windows skill whose Cursor root starts with a slash", async () => {
+    const openFolder = String.raw`D:\projects\carpeta`;
+    const skillFilePath = "/D:/projects/carpeta/.cursor/skills/maquetado/SKILL.md";
+    intake = startLiveActivationIntake({
+      spoolPath,
+      projectsDirectory,
+      workspacePaths: [openFolder],
+      openFolderPaths: [openFolder],
+      watchFiles,
+      onSkillActivated: (activatedSkillPath, workspaceDirectory) =>
+        feed.addActivation(
+          path.win32.basename(path.win32.dirname(activatedSkillPath)),
+          path.win32.basename(workspaceDirectory),
+          activatedSkillPath,
+        ),
+    });
+    await intake.whenSettled();
+    await writeFile(spoolPath, spoolLine(skillFilePath, ["/D:/projects/carpeta"]));
+
+    await notifyChange(spoolPath);
+
+    expect(chipNames()).toEqual(["maquetado"]);
+    expect(feed.getSnapshot().chips[0]?.workspaceName).toBe("carpeta");
+    const chipId = feed.getSnapshot().chips[0]?.id ?? "";
+    expect(feed.getSkillFilePath(chipId)).toBe(
+      String.raw`D:\projects\carpeta\.cursor\skills\maquetado\SKILL.md`,
+    );
+  });
+
+  it("ignores a Windows skill whose root is not an open folder", async () => {
+    intake = startLiveActivationIntake({
+      spoolPath,
+      projectsDirectory,
+      workspacePaths: [String.raw`C:\otra`],
+      openFolderPaths: [String.raw`C:\otra`],
+      watchFiles,
+      onSkillActivated: (activatedSkillPath, workspaceDirectory) =>
+        feed.addActivation(activatedSkillPath, workspaceDirectory, activatedSkillPath),
+    });
+    await intake.whenSettled();
+    await writeFile(
+      spoolPath,
+      spoolLine("/D:/projects/carpeta/.cursor/skills/maquetado/SKILL.md", ["/D:/projects/carpeta"]),
+    );
+
+    await notifyChange(spoolPath);
+
+    expect(chipNames()).toEqual([]);
   });
 
   it("adds a chip for a spool read that shares an open folder and ignores other windows", async () => {
